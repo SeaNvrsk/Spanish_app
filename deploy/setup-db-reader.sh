@@ -58,11 +58,21 @@ fi
 
 # Frontend build with hidden base path
 cd "$INSTALL_DIR/frontend"
-if ! command -v npm >/dev/null 2>&1; then
-  echo "→ Installing Node.js 20…"
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-  sudo apt-get install -y nodejs
-fi
+
+node_major() {
+  node -v 2>/dev/null | sed 's/v//' | cut -d. -f1
+}
+
+ensure_node20() {
+  if ! command -v node >/dev/null 2>&1 || [ "$(node_major)" -lt 20 ] 2>/dev/null; then
+    echo "→ Installing Node.js 20 (current: $(node -v 2>/dev/null || echo 'not installed'))…"
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+  fi
+  echo "→ Node $(node -v), npm $(npm -v)"
+}
+
+ensure_node20
 npm ci --silent
 VITE_BASE_PATH="${PUBLIC_PATH}/" npm run build
 
