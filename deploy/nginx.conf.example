@@ -1,0 +1,67 @@
+# nginx reverse proxy for Espanol para la Familia
+# Copy to /etc/nginx/sites-available/espanol and symlink into sites-enabled.
+# Serves the built SPA statically and proxies /api to the FastAPI backend.
+
+# Rate limit auth endpoints (basic brute-force protection).
+limit_req_zone $binary_remote_addr zone=espanol_auth:10m rate=10r/m;
+
+server {
+    listen 80;
+    server_name espanol.tudominio.com;
+    # Redirect all HTTP to HTTPS.
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name espanol.tudominio.com;
+
+    # --- TLS (use certbot / Let's Encrypt to obtain these) ---
+    ssl_certificate     /etc/letsencrypt/live/espanol.tudominio.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/espanol.tudominio.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # --- Security headers ---
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    root /opt/espanol/frontend/dist;
+    index index.html;
+
+    # Cache hashed static assets aggressively.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # API -> FastAPI (gunicorn on 8010)
+    location /api/ {
+        # Tighter limit on auth to slow brute force; burst allows normal use.
+        location ~ ^/api/auth/(login|register) {
+            limit_req zone=espanol_auth burst=5 nodelay;
+            proxy_pass http://127.0.0.1:8010;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        proxy_pass http://127.0.0.1:8010;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # SPA fallback for client-side routes.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
