@@ -5,11 +5,12 @@ import "./index.css";
 import App from "./App.jsx";
 import { I18nProvider } from "./i18n";
 import { AuthProvider } from "./auth";
+import { appBase } from "./appBase";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <I18nProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={appBase || undefined}>
         <AuthProvider>
           <App />
         </AuthProvider>

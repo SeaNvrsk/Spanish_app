@@ -1,7 +1,7 @@
 import axios from "axios";
+import { appBase, appPath } from "./appBase";
 
-// Same-origin in production (served by FastAPI); Vite proxy handles dev.
-const api = axios.create({ baseURL: "/api" });
+const api = axios.create({ baseURL: appPath("/api") });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -14,7 +14,7 @@ api.interceptors.response.use(
   (err) => {
     if (err?.response?.status === 401) {
       localStorage.removeItem("token");
-      if (!location.pathname.startsWith("/login")) location.href = "/login";
+      if (!location.pathname.startsWith(appPath("/login"))) location.href = appPath("/login");
     }
     return Promise.reject(err);
   }

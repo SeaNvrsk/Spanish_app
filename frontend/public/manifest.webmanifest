@@ -2,7 +2,7 @@
   "name": "Español para la Familia",
   "short_name": "Español",
   "description": "Learn Mexican Spanish together, from A1 to B1.",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0f766e",
   "theme_color": "#0f766e",
