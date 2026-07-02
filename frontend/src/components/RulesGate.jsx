@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../auth";
 import { useI18n, personalWelcomeKey } from "../i18n";
 
-const RULES_VERSION = "v6";
+const RULES_VERSION = "v8";
 
 function rulesKey(userId) {
   return `family_rules_${RULES_VERSION}_${userId}`;
@@ -97,7 +97,10 @@ export default function RulesGate({ children, forceShow = false, onClose }) {
 
               <RuleBlock icon="📦" title={t("rulesQuarterTitle")}>
                 <p>{t("rulesQuarterBody")}</p>
-                <p className="font-semibold text-amber-700">{t("rulesQuarterShip")}</p>
+                <p className="font-semibold text-slate-700">{t("rulesQuarterA1")}</p>
+                <p className="font-semibold text-slate-700">{t("rulesQuarterA2")}</p>
+                <p className="font-semibold text-slate-700">{t("rulesQuarterB1")}</p>
+                <p className="text-xs text-slate-500">{t("rulesQuarterShip")}</p>
               </RuleBlock>
 
               {user.is_admin && (
