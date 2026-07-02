@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../auth";
 import { useI18n, personalWelcomeKey } from "../i18n";
 
-const RULES_VERSION = "v3";
+const RULES_VERSION = "v6";
 
 function rulesKey(userId) {
   return `family_rules_${RULES_VERSION}_${userId}`;
@@ -65,19 +65,33 @@ export default function RulesGate({ children, forceShow = false, onClose }) {
             <p className="mt-2 text-center text-sm text-teal-100">{t("rulesIntro")}</p>
 
             <div className="mt-6 space-y-3">
+              <RuleBlock icon="👨‍👩‍👧‍👧" title={t("rulesFamilyTitle")}>
+                <p>{t("rulesFamilyBody")}</p>
+              </RuleBlock>
+
+              <RuleBlock icon="💌" title={t("rulesCreatorTitle")}>
+                <p>{t("rulesCreatorBody")}</p>
+              </RuleBlock>
+
               <PersonalWelcome name={user.name} t={t} />
 
               <RuleBlock icon="$" title={t("rulesPesosTitle")}>
                 <p>{t("rulesPesosLesson")}</p>
                 <p>{t("rulesPesosExam")}</p>
                 <p>{t("rulesPesosReview")}</p>
+                <p>{t("rulesPesosRetry")}</p>
                 <p>{t("rulesPesosMonth")}</p>
               </RuleBlock>
 
               <RuleBlock icon="🏆" title={t("rulesPlacesTitle")}>
+                <p>{t("rulesPlacesIntro")}</p>
                 <p>{t("rulesPlace1")}</p>
                 <p>{t("rulesPlace2")}</p>
                 <p>{t("rulesPlace3")}</p>
+                <p className="mt-2 font-semibold text-slate-700">{t("rulesTie")}</p>
+                <p className="text-xs text-slate-500">{t("rulesTieEx1")}</p>
+                <p className="text-xs text-slate-500">{t("rulesTieEx2")}</p>
+                <p className="text-xs text-slate-500">{t("rulesTieEx3")}</p>
                 <p className="text-xs text-slate-400">{t("rulesCarryover")}</p>
               </RuleBlock>
 

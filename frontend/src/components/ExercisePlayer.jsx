@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../api";
 import { useI18n, nativeGloss } from "../i18n";
 import { useSpeak } from "../tts";
+import { WordImage } from "./WordImage";
 
 export function normalize(s) {
   return (s || "")
@@ -315,7 +316,8 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
         <p className="mb-4 text-base font-extrabold text-slate-800 sm:mb-6 sm:text-lg">{t(promptKey)}</p>
 
         {ex.type === "flashcard" && (
-          <div className="flex flex-col items-center gap-5 rounded-3xl bg-teal-50 py-10 animate-pop">
+          <div className="flex flex-col items-center gap-5 rounded-3xl bg-teal-50 py-8 animate-pop sm:py-10">
+            {ex.image_url && <WordImage url={ex.image_url} alt={ex.es} />}
             <SpeakButton text={ex.audio} big />
             <div className="text-4xl font-black text-slate-800">{ex.es}</div>
             <div className="text-lg font-semibold text-teal-700">{nativeGloss(ex.translations, lang)}</div>
@@ -329,14 +331,18 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
         )}
 
         {ex.type === "choice" && ex.direction === "es_to_native" && (
-          <div className="mb-6 flex items-center justify-center gap-3 rounded-2xl bg-slate-50 py-6">
-            <span className="text-3xl font-black text-slate-800">{ex.es}</span>
-            <SpeakButton text={ex.audio} />
+          <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl bg-slate-50 py-6">
+            {ex.image_url && <WordImage url={ex.image_url} alt={ex.es} className="max-h-36" />}
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-3xl font-black text-slate-800">{ex.es}</span>
+              <SpeakButton text={ex.audio} />
+            </div>
           </div>
         )}
 
         {ex.type === "choice" && ex.direction === "native_to_es" && (
-          <div className="mb-6 flex items-center justify-center rounded-2xl bg-slate-50 py-6">
+          <div className="mb-6 flex flex-col items-center gap-3 rounded-2xl bg-slate-50 py-6">
+            {ex.image_url && <WordImage url={ex.image_url} alt={ex.es} className="max-h-36" />}
             <span className="text-2xl font-black text-slate-800">{nativeGloss(ex.translations, lang)}</span>
           </div>
         )}

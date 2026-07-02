@@ -16,6 +16,7 @@ from ..schemas import (
 )
 from ..curriculum import get_curriculum, get_all_lessons
 from ..family import competitors, FAMILY_COMPETITORS
+from ..gamification import month_rankings
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
@@ -112,8 +113,9 @@ def family_overview(current: User = Depends(get_current_user), db: Session = Dep
         raise HTTPException(status_code=403, detail="Admin access required")
 
     month = date.today().strftime("%Y-%m")
-    comp = sorted(competitors(db), key=lambda u: (-_month_pesos(db, u.id), u.id))
-    comp_rank = {u.id: i for i, u in enumerate(comp, start=1)}
+    pesos_map = {u.id: _month_pesos(db, u.id) for u in competitors(db)}
+    comp_ranked = month_rankings(competitors(db), pesos_map)
+    comp_rank = {row["user_id"]: row["rank"] for row in comp_ranked}
 
     members = []
     for u in db.query(User).order_by(User.is_admin.asc(), User.name.asc()).all():

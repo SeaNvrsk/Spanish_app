@@ -1,0 +1,737 @@
+{
+  "hola": {
+    "file": "hola.webp",
+    "es": "Hola",
+    "en": "Hello"
+  },
+  "buenos-dias": {
+    "file": "buenos-dias.webp",
+    "es": "Buenos días",
+    "en": "Good morning"
+  },
+  "buenas-tardes": {
+    "file": "buenas-tardes.webp",
+    "es": "Buenas tardes",
+    "en": "Good afternoon"
+  },
+  "buenas-noches": {
+    "file": "buenas-noches.webp",
+    "es": "Buenas noches",
+    "en": "Good evening/night"
+  },
+  "adios": {
+    "file": "adios.webp",
+    "es": "Adiós",
+    "en": "Goodbye"
+  },
+  "que-onda": {
+    "file": "que-onda.webp",
+    "es": "¿Qué onda?",
+    "en": "What's up? (casual)"
+  },
+  "como-te-llamas": {
+    "file": "como-te-llamas.webp",
+    "es": "¿Cómo te llamas?",
+    "en": "What's your name?"
+  },
+  "me-llamo": {
+    "file": "me-llamo.webp",
+    "es": "Me llamo...",
+    "en": "My name is..."
+  },
+  "mucho-gusto": {
+    "file": "mucho-gusto.webp",
+    "es": "Mucho gusto",
+    "en": "Nice to meet you"
+  },
+  "como-estas": {
+    "file": "como-estas.webp",
+    "es": "¿Cómo estás?",
+    "en": "How are you?"
+  },
+  "estoy-bien": {
+    "file": "estoy-bien.webp",
+    "es": "Estoy bien",
+    "en": "I'm fine"
+  },
+  "y-tu": {
+    "file": "y-tu.webp",
+    "es": "¿Y tú?",
+    "en": "And you?"
+  },
+  "yo": {
+    "file": "yo.webp",
+    "es": "yo",
+    "en": "I"
+  },
+  "tu": {
+    "file": "tu.webp",
+    "es": "tú",
+    "en": "you"
+  },
+  "el": {
+    "file": "el.webp",
+    "es": "él",
+    "en": "he"
+  },
+  "ella": {
+    "file": "ella.webp",
+    "es": "ella",
+    "en": "she"
+  },
+  "nosotros": {
+    "file": "nosotros.webp",
+    "es": "nosotros",
+    "en": "we"
+  },
+  "ustedes": {
+    "file": "ustedes.webp",
+    "es": "ustedes",
+    "en": "you (plural)"
+  },
+  "ellos": {
+    "file": "ellos.webp",
+    "es": "ellos",
+    "en": "they"
+  },
+  "por-favor": {
+    "file": "por-favor.webp",
+    "es": "por favor",
+    "en": "please"
+  },
+  "gracias": {
+    "file": "gracias.webp",
+    "es": "gracias",
+    "en": "thank you"
+  },
+  "de-nada": {
+    "file": "de-nada.webp",
+    "es": "de nada",
+    "en": "you're welcome"
+  },
+  "si": {
+    "file": "si.webp",
+    "es": "sí",
+    "en": "yes"
+  },
+  "no": {
+    "file": "no.webp",
+    "es": "no",
+    "en": "no"
+  },
+  "hasta-luego": {
+    "file": "hasta-luego.webp",
+    "es": "hasta luego",
+    "en": "see you later"
+  },
+  "nos-vemos": {
+    "file": "nos-vemos.webp",
+    "es": "nos vemos",
+    "en": "see you"
+  },
+  "que-tal": {
+    "file": "que-tal.webp",
+    "es": "¿Qué tal?",
+    "en": "how's it going?"
+  },
+  "bienvenido": {
+    "file": "bienvenido.webp",
+    "es": "bienvenido",
+    "en": "welcome"
+  },
+  "bienvenida": {
+    "file": "bienvenida.webp",
+    "es": "bienvenida",
+    "en": "welcome (f)"
+  },
+  "senor": {
+    "file": "senor.webp",
+    "es": "señor",
+    "en": "Mr./sir"
+  },
+  "senora": {
+    "file": "senora.webp",
+    "es": "señora",
+    "en": "Mrs./ma'am"
+  },
+  "amigo": {
+    "file": "amigo.png",
+    "es": "amigo",
+    "en": "friend (m)"
+  },
+  "amiga": {
+    "file": "amiga.webp",
+    "es": "amiga",
+    "en": "friend (f)"
+  },
+  "encantado": {
+    "file": "encantado.webp",
+    "es": "encantado",
+    "en": "pleased to meet you (m)"
+  },
+  "encantada": {
+    "file": "encantada.webp",
+    "es": "encantada",
+    "en": "pleased to meet you (f)"
+  },
+  "igualmente": {
+    "file": "igualmente.webp",
+    "es": "igualmente",
+    "en": "likewise"
+  },
+  "disculpe": {
+    "file": "disculpe.webp",
+    "es": "disculpe",
+    "en": "excuse me (formal)"
+  },
+  "permiso": {
+    "file": "permiso.webp",
+    "es": "permiso",
+    "en": "excuse me / permission"
+  },
+  "con-permiso": {
+    "file": "con-permiso.webp",
+    "es": "con permiso",
+    "en": "excuse me (passing)"
+  },
+  "un-momento": {
+    "file": "un-momento.webp",
+    "es": "un momento",
+    "en": "one moment"
+  },
+  "espere": {
+    "file": "espere.webp",
+    "es": "espere",
+    "en": "wait (formal)"
+  },
+  "cuidate": {
+    "file": "cuidate.webp",
+    "es": "cuídate",
+    "en": "take care"
+  },
+  "saludos": {
+    "file": "saludos.webp",
+    "es": "saludos",
+    "en": "greetings/regards"
+  },
+  "claro": {
+    "file": "claro.webp",
+    "es": "claro",
+    "en": "of course"
+  },
+  "presentar": {
+    "file": "presentar.webp",
+    "es": "presentar",
+    "en": "to introduce"
+  },
+  "conocer": {
+    "file": "conocer.webp",
+    "es": "conocer",
+    "en": "to meet/know"
+  },
+  "como-esta-usted": {
+    "file": "como-esta-usted.webp",
+    "es": "¿Cómo está usted?",
+    "en": "How are you? (formal)"
+  },
+  "la-bienvenida": {
+    "file": "la-bienvenida.webp",
+    "es": "la bienvenida",
+    "en": "the welcome"
+  },
+  "tres": {
+    "file": "tres.webp",
+    "es": "tres",
+    "en": "three"
+  },
+  "chao": {
+    "file": "chao.webp",
+    "es": "chao",
+    "en": "bye (casual)"
+  },
+  "hasta-manana": {
+    "file": "hasta-manana.webp",
+    "es": "hasta mañana",
+    "en": "see you tomorrow"
+  },
+  "buena-suerte": {
+    "file": "buena-suerte.webp",
+    "es": "buena suerte",
+    "en": "good luck"
+  },
+  "oye": {
+    "file": "oye.webp",
+    "es": "oye",
+    "en": "hey"
+  },
+  "mira": {
+    "file": "mira.webp",
+    "es": "mira",
+    "en": "look"
+  },
+  "mande": {
+    "file": "mande.webp",
+    "es": "mande",
+    "en": "pardon? (Mexican)"
+  },
+  "orale": {
+    "file": "orale.webp",
+    "es": "órale",
+    "en": "wow / come on (Mexican)"
+  },
+  "animo": {
+    "file": "animo.webp",
+    "es": "ánimo",
+    "en": "cheer up / go for it"
+  },
+  "cuanto-tiempo": {
+    "file": "cuanto-tiempo.webp",
+    "es": "¿Cuánto tiempo!",
+    "en": "long time no see!"
+  },
+  "formal": {
+    "file": "formal.webp",
+    "es": "formal",
+    "en": "formal"
+  },
+  "informal": {
+    "file": "informal.webp",
+    "es": "informal",
+    "en": "informal"
+  },
+  "usted": {
+    "file": "usted.webp",
+    "es": "usted",
+    "en": "you (formal)"
+  },
+  "me-llamo-juan": {
+    "file": "me-llamo-juan.webp",
+    "es": "Me llamo Juan.",
+    "en": "My name is Juan."
+  },
+  "como-se-llama": {
+    "file": "como-se-llama.webp",
+    "es": "¿Cómo se llama?",
+    "en": "What's your name? (formal)"
+  },
+  "le-presento-a": {
+    "file": "le-presento-a.webp",
+    "es": "Le presento a...",
+    "en": "Let me introduce..."
+  },
+  "es-un-placer": {
+    "file": "es-un-placer.webp",
+    "es": "Es un placer",
+    "en": "It's a pleasure"
+  },
+  "como-amanecio": {
+    "file": "como-amanecio.webp",
+    "es": "¿Cómo amaneció?",
+    "en": "How did you wake up?"
+  },
+  "que-le-vaya-bien": {
+    "file": "que-le-vaya-bien.webp",
+    "es": "que le vaya bien",
+    "en": "have a good one (formal)"
+  },
+  "un-gusto": {
+    "file": "un-gusto.webp",
+    "es": "un gusto",
+    "en": "a pleasure"
+  },
+  "presentarse": {
+    "file": "presentarse.webp",
+    "es": "presentarse",
+    "en": "to introduce oneself"
+  },
+  "el-nombre": {
+    "file": "el-nombre.webp",
+    "es": "el nombre",
+    "en": "name"
+  },
+  "apellido": {
+    "file": "apellido.webp",
+    "es": "apellido",
+    "en": "last name"
+  },
+  "de-que-parte-eres": {
+    "file": "de-que-parte-eres.webp",
+    "es": "¿De qué parte eres?",
+    "en": "Where are you from?"
+  },
+  "extranjero": {
+    "file": "extranjero.webp",
+    "es": "extranjero",
+    "en": "foreigner (m)"
+  },
+  "extranjera": {
+    "file": "extranjera.webp",
+    "es": "extranjera",
+    "en": "foreigner (f)"
+  },
+  "el-saludo": {
+    "file": "el-saludo.webp",
+    "es": "el saludo",
+    "en": "greeting"
+  },
+  "uno": {
+    "file": "uno.webp",
+    "es": "uno",
+    "en": "one"
+  },
+  "dos": {
+    "file": "dos.webp",
+    "es": "dos",
+    "en": "two"
+  },
+  "cuatro": {
+    "file": "cuatro.webp",
+    "es": "cuatro",
+    "en": "four"
+  },
+  "cinco": {
+    "file": "cinco.webp",
+    "es": "cinco",
+    "en": "five"
+  },
+  "seis": {
+    "file": "seis.webp",
+    "es": "seis",
+    "en": "six"
+  },
+  "siete": {
+    "file": "siete.webp",
+    "es": "siete",
+    "en": "seven"
+  },
+  "ocho": {
+    "file": "ocho.webp",
+    "es": "ocho",
+    "en": "eight"
+  },
+  "nueve": {
+    "file": "nueve.webp",
+    "es": "nueve",
+    "en": "nine"
+  },
+  "diez": {
+    "file": "diez.webp",
+    "es": "diez",
+    "en": "ten"
+  },
+  "once": {
+    "file": "once.webp",
+    "es": "once",
+    "en": "eleven"
+  },
+  "doce": {
+    "file": "doce.webp",
+    "es": "doce",
+    "en": "twelve"
+  },
+  "trece": {
+    "file": "trece.webp",
+    "es": "trece",
+    "en": "thirteen"
+  },
+  "catorce": {
+    "file": "catorce.webp",
+    "es": "catorce",
+    "en": "fourteen"
+  },
+  "quince": {
+    "file": "quince.webp",
+    "es": "quince",
+    "en": "fifteen"
+  },
+  "veinte": {
+    "file": "veinte.webp",
+    "es": "veinte",
+    "en": "twenty"
+  },
+  "treinta": {
+    "file": "treinta.webp",
+    "es": "treinta",
+    "en": "thirty"
+  },
+  "cien": {
+    "file": "cien.webp",
+    "es": "cien",
+    "en": "one hundred"
+  },
+  "el-libro": {
+    "file": "el-libro.webp",
+    "es": "el libro",
+    "en": "book"
+  },
+  "la-casa": {
+    "file": "la-casa.webp",
+    "es": "la casa",
+    "en": "house"
+  },
+  "la": {
+    "file": "la.webp",
+    "es": "la",
+    "en": "the (f)"
+  },
+  "los": {
+    "file": "los.webp",
+    "es": "los",
+    "en": "the (m pl)"
+  },
+  "las": {
+    "file": "las.webp",
+    "es": "las",
+    "en": "the (f pl)"
+  },
+  "dieciseis": {
+    "file": "dieciseis.webp",
+    "es": "dieciséis",
+    "en": "sixteen"
+  },
+  "diecisiete": {
+    "file": "diecisiete.webp",
+    "es": "diecisiete",
+    "en": "seventeen"
+  },
+  "dieciocho": {
+    "file": "dieciocho.webp",
+    "es": "dieciocho",
+    "en": "eighteen"
+  },
+  "diecinueve": {
+    "file": "diecinueve.webp",
+    "es": "diecinueve",
+    "en": "nineteen"
+  },
+  "veintiuno": {
+    "file": "veintiuno.webp",
+    "es": "veintiuno",
+    "en": "twenty-one"
+  },
+  "veintidos": {
+    "file": "veintidos.webp",
+    "es": "veintidós",
+    "en": "twenty-two"
+  },
+  "cuarenta": {
+    "file": "cuarenta.webp",
+    "es": "cuarenta",
+    "en": "forty"
+  },
+  "cincuenta": {
+    "file": "cincuenta.webp",
+    "es": "cincuenta",
+    "en": "fifty"
+  },
+  "sesenta": {
+    "file": "sesenta.webp",
+    "es": "sesenta",
+    "en": "sixty"
+  },
+  "setenta": {
+    "file": "setenta.webp",
+    "es": "setenta",
+    "en": "seventy"
+  },
+  "ochenta": {
+    "file": "ochenta.webp",
+    "es": "ochenta",
+    "en": "eighty"
+  },
+  "noventa": {
+    "file": "noventa.webp",
+    "es": "noventa",
+    "en": "ninety"
+  },
+  "mil": {
+    "file": "mil.webp",
+    "es": "mil",
+    "en": "one thousand"
+  },
+  "primero": {
+    "file": "primero.webp",
+    "es": "primero",
+    "en": "first"
+  },
+  "segundo": {
+    "file": "segundo.webp",
+    "es": "segundo",
+    "en": "second"
+  },
+  "tercero": {
+    "file": "tercero.webp",
+    "es": "tercero",
+    "en": "third"
+  },
+  "el-perro": {
+    "file": "el-perro.webp",
+    "es": "el perro",
+    "en": "dog"
+  },
+  "el-gato": {
+    "file": "el-gato.webp",
+    "es": "el gato",
+    "en": "cat"
+  },
+  "la-mesa": {
+    "file": "la-mesa.webp",
+    "es": "la mesa",
+    "en": "table"
+  },
+  "la-silla": {
+    "file": "la-silla.webp",
+    "es": "la silla",
+    "en": "chair"
+  },
+  "el-agua": {
+    "file": "el-agua.webp",
+    "es": "el agua",
+    "en": "water"
+  },
+  "la-comida": {
+    "file": "la-comida.webp",
+    "es": "la comida",
+    "en": "food"
+  },
+  "el-taco": {
+    "file": "el-taco.webp",
+    "es": "el taco",
+    "en": "taco"
+  },
+  "la-playa": {
+    "file": "la-playa.webp",
+    "es": "la playa",
+    "en": "beach"
+  },
+  "el-coche": {
+    "file": "el-coche.webp",
+    "es": "el coche",
+    "en": "car"
+  },
+  "la-calle": {
+    "file": "la-calle.webp",
+    "es": "la calle",
+    "en": "street"
+  },
+  "el-parque": {
+    "file": "el-parque.webp",
+    "es": "el parque",
+    "en": "park"
+  },
+  "la-escuela": {
+    "file": "la-escuela.webp",
+    "es": "la escuela",
+    "en": "school"
+  },
+  "el-telefono": {
+    "file": "el-telefono.webp",
+    "es": "el teléfono",
+    "en": "phone"
+  },
+  "la-puerta": {
+    "file": "la-puerta.webp",
+    "es": "la puerta",
+    "en": "door"
+  },
+  "un": {
+    "file": "un.webp",
+    "es": "un",
+    "en": "a/an (m)"
+  },
+  "una": {
+    "file": "una.webp",
+    "es": "una",
+    "en": "a/an (f)"
+  },
+  "unos": {
+    "file": "unos.webp",
+    "es": "unos",
+    "en": "some (m pl)"
+  },
+  "unas": {
+    "file": "unas.webp",
+    "es": "unas",
+    "en": "some (f pl)"
+  },
+  "cuantos": {
+    "file": "cuantos.webp",
+    "es": "¿Cuántos?",
+    "en": "How many? (m)"
+  },
+  "cuantas": {
+    "file": "cuantas.webp",
+    "es": "¿Cuántas?",
+    "en": "How many? (f)"
+  },
+  "tengo-veinticinco-anos": {
+    "file": "tengo-veinticinco-anos.webp",
+    "es": "Tengo veinticinco años.",
+    "en": "I'm 25 years old."
+  },
+  "es-la-numero-uno": {
+    "file": "es-la-numero-uno.webp",
+    "es": "Es la número uno.",
+    "en": "It's number one."
+  },
+  "veinticinco": {
+    "file": "veinticinco.webp",
+    "es": "veinticinco",
+    "en": "twenty-five"
+  },
+  "media": {
+    "file": "media.webp",
+    "es": "media",
+    "en": "half"
+  },
+  "entero": {
+    "file": "entero.webp",
+    "es": "entero",
+    "en": "whole"
+  },
+  "par": {
+    "file": "par.webp",
+    "es": "par",
+    "en": "pair/even"
+  },
+  "impar": {
+    "file": "impar.webp",
+    "es": "impar",
+    "en": "odd"
+  },
+  "sumar": {
+    "file": "sumar.webp",
+    "es": "sumar",
+    "en": "to add"
+  },
+  "restar": {
+    "file": "restar.webp",
+    "es": "restar",
+    "en": "to subtract"
+  },
+  "igual": {
+    "file": "igual.webp",
+    "es": "igual",
+    "en": "equal/same"
+  },
+  "mas-o-menos": {
+    "file": "mas-o-menos.webp",
+    "es": "más o menos",
+    "en": "more or less"
+  },
+  "aproximadamente": {
+    "file": "aproximadamente.webp",
+    "es": "aproximadamente",
+    "en": "approximately"
+  },
+  "el-numero": {
+    "file": "el-numero.webp",
+    "es": "el número",
+    "en": "number"
+  },
+  "la-cantidad": {
+    "file": "la-cantidad.webp",
+    "es": "la cantidad",
+    "en": "quantity"
+  }
+}

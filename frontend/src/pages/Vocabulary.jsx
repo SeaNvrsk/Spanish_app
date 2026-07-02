@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api";
 import { useI18n, nativeGloss } from "../i18n";
 import { SpeakButton } from "../components/ExercisePlayer";
+import { WordImage } from "../components/WordImage";
 
 export default function Vocabulary() {
   const { t, lang } = useI18n();
@@ -60,9 +61,16 @@ export default function Vocabulary() {
               key={w.word_es}
               className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-3 py-3 shadow-sm sm:px-4"
             >
-              <SpeakButton text={w.word_es} />
+              {w.image_url ? (
+                <WordImage url={w.image_url} alt={w.word_es} className="max-h-16 max-w-16 shrink-0 rounded-xl shadow-sm" />
+              ) : (
+                <SpeakButton text={w.word_es} />
+              )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-extrabold text-slate-800">{w.word_es}</p>
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-base font-extrabold text-slate-800">{w.word_es}</p>
+                  {w.image_url && <SpeakButton text={w.word_es} />}
+                </div>
                 <p className="truncate text-sm font-semibold text-slate-500">
                   {nativeGloss({ en: w.word_en, ru: w.word_ru }, lang)}
                 </p>

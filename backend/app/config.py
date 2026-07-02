@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     openai_tts_voice: str = "coral"
     openai_base_url: str = "https://api.openai.com/v1"
     openai_chat_model: str = "gpt-4o-mini"
+    openai_image_model: str = "gpt-image-1"
+    openai_image_quality: str = "medium"
+    openai_image_size: str = "1024x1024"  # API minimum; downscaled after download
+    openai_image_save_px: int = 512  # flashcards on phone (~max 144px CSS)
+    openai_image_save_format: str = "webp"  # webp | png
     # Comma-separated admin emails (excluded from family rankings; can view all stats).
     admin_emails: str = "an.mexico@icloud.com"
 

@@ -43,6 +43,69 @@ function DayNode({ day, state, onClick }) {
   );
 }
 
+function GoalPath({ levels, t }) {
+  const currentIdx = levels.findIndex((l) => l.progress_percent < 100);
+  const activeIdx = currentIdx === -1 ? levels.length - 1 : currentIdx;
+
+  return (
+    <div className="mb-5 rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-600 p-4 text-white shadow-lg">
+      <p className="text-xs font-bold uppercase tracking-wide text-teal-100">{t("yourGoal")}</p>
+      <p className="mt-0.5 text-sm font-semibold text-teal-50">{t("goalPathSub")}</p>
+      <div className="mt-4 space-y-3">
+        {levels.map((lvl, i) => {
+          const done = lvl.progress_percent;
+          const left = 100 - done;
+          const isCurrent = i === activeIdx && done < 100;
+          const isComplete = done >= 100;
+          const isFuture = i > activeIdx && !isComplete;
+
+          return (
+            <div
+              key={lvl.id}
+              className={`rounded-xl px-3 py-2.5 ${isCurrent ? "bg-white/20 ring-2 ring-white/40" : "bg-white/10"}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-black">{lvl.level}</span>
+                  {isCurrent && (
+                    <span className="rounded-full bg-amber-300 px-2 py-0.5 text-[10px] font-black text-amber-900">
+                      {t("goalCurrent")}
+                    </span>
+                  )}
+                  {isComplete && <span className="text-sm">✓</span>}
+                </div>
+                <span className="text-[11px] font-bold text-teal-100">
+                  {lvl.months} {t("months")}
+                </span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/20">
+                <div
+                  className={`h-full rounded-full transition-all ${isFuture ? "bg-white/30" : "bg-white"}`}
+                  style={{ width: `${done}%` }}
+                />
+              </div>
+              <div className="mt-1 flex justify-between text-[11px] font-semibold">
+                {isFuture ? (
+                  <span className="text-teal-200">{t("goalLocked")}</span>
+                ) : (
+                  <>
+                    <span className="text-teal-50">
+                      {done}% {t("goalDone")}
+                    </span>
+                    <span className="text-teal-100">
+                      {left}% {t("goalRemaining")}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { t, lang } = useI18n();
   const navigate = useNavigate();
@@ -104,36 +167,43 @@ export default function Dashboard() {
 
   return (
     <div className="px-4 py-4">
-      <div className="mb-5 rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-600 p-4 text-white shadow-lg">
-        <p className="text-xs font-bold uppercase tracking-wide text-teal-100">{t("yourGoal")}</p>
-        <p className="mt-0.5 text-xl font-extrabold sm:text-lg">🎯 {t("goalText")}</p>
-        <p className="mt-1 text-sm text-teal-100 sm:text-xs">365 {t("day")} · 52 {t("week")}</p>
-        {data.program_day > 0 && (
-          <p className="mt-2 rounded-xl bg-white/15 px-3 py-2 text-xs font-semibold text-teal-50">
-            📅 {t("calendarDay")} {data.program_day}
-            {data.program_start_date && (
-              <span className="text-teal-100"> · {t("since")} {data.program_start_date}</span>
-            )}
-          </p>
-        )}
-      </div>
+      <GoalPath levels={data.levels} t={t} />
+
+      {data.program_day > 0 && (
+        <p className="mb-4 rounded-xl bg-slate-100 px-3 py-2 text-center text-xs font-semibold text-slate-600">
+          📅 {t("calendarDay")} {data.program_day}
+          {data.program_start_date && (
+            <span className="text-slate-400"> · {t("since")} {data.program_start_date}</span>
+          )}
+        </p>
+      )}
 
       <p className="mb-4 text-center text-xs font-semibold text-slate-400 sm:text-sm">{t("catchUpHint")}</p>
 
-      {review && review.total_cards > 0 && (
+      {review && (
         <button
-          onClick={() => navigate("/review")}
+          onClick={() => navigate(review.due > 0 ? "/review" : "/review?mode=practice")}
           className="mb-5 flex w-full items-center gap-3 rounded-2xl border border-indigo-100 bg-white p-4 text-left shadow-sm transition active:scale-[0.99]"
         >
           <span className="text-3xl">🧠</span>
           <div className="flex-1">
             <p className="text-sm font-extrabold text-slate-800">{t("dailyReview")}</p>
-            <p className="text-xs text-slate-500">{t("reviewSubtitle")}</p>
+            <p className="text-xs text-slate-500">
+              {review.due > 0
+                ? t("reviewSubtitle")
+                : review.total_cards > 0
+                  ? t("practiceReviewSub")
+                  : t("reviewNeedLessons")}
+            </p>
           </div>
           {review.due > 0 ? (
             <span className="rounded-full bg-indigo-600 px-3 py-1 text-sm font-black text-white">{review.due}</span>
+          ) : review.total_cards > 0 ? (
+            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black text-indigo-600">
+              {review.practice_available}
+            </span>
           ) : (
-            <span className="text-xl">✓</span>
+            <span className="text-xl">📚</span>
           )}
         </button>
       )}

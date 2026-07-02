@@ -62,6 +62,11 @@ export default function Leaderboard() {
                   {e.spend_percent > 0 && (
                     <p className="text-[10px] font-semibold text-amber-50">
                       {e.spend_percent}% · {e.spendable} 💰 {t("canSpend")}
+                      {e.tied && (
+                        <span className="ml-1 rounded bg-white/20 px-1.5 py-0.5 text-[9px] font-bold">
+                          {t("tieSplit")}
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>

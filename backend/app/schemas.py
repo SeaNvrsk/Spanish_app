@@ -151,6 +151,7 @@ class VocabularyEntry(BaseModel):
     word_ru: str
     reps: int
     lapses: int
+    image_url: Optional[str] = None
 
 
 class VocabularyResponse(BaseModel):

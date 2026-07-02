@@ -8,7 +8,7 @@ from sqlalchemy import text, inspect
 
 from .config import get_settings
 from .database import Base, engine
-from .routers import auth, users, lessons, progress, stats, tts, review, pronunciation, rewards, tools, profile
+from .routers import auth, users, lessons, progress, stats, tts, review, pronunciation, rewards, tools, profile, images
 
 settings = get_settings()
 
@@ -101,6 +101,7 @@ app.include_router(pronunciation.router)
 app.include_router(rewards.router)
 app.include_router(tools.router)
 app.include_router(profile.router)
+app.include_router(images.router)
 
 
 @app.get("/api/health")

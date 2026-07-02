@@ -14,6 +14,48 @@ REVIEW_DAILY_PESOS_CAP = 5
 PLACE_SPEND_SHARE = {1: 1.0, 2: 0.75, 3: 0.5}
 
 
+def month_rankings(users: list, pesos_map: dict[int, int]) -> list[dict]:
+    """Rank learners by month pesos; tied scores pool place shares and split evenly.
+
+    Example: two tied for 1st pool 100% + 75% → each gets 87.5% of their balance.
+    """
+    ordered = sorted(users, key=lambda u: (-int(pesos_map.get(u.id, 0) or 0), u.id))
+    entries: list[dict] = []
+    i = 0
+    rank = 1
+    while i < len(ordered):
+        score = int(pesos_map.get(ordered[i].id, 0) or 0)
+        j = i + 1
+        while j < len(ordered) and int(pesos_map.get(ordered[j].id, 0) or 0) == score:
+            j += 1
+        group = ordered[i:j]
+        n = len(group)
+        pooled = sum(PLACE_SPEND_SHARE.get(rank + k, 0.0) for k in range(n))
+        share_each = pooled / n if n else 0.0
+        for u in group:
+            mp = score
+            entries.append({
+                "user_id": u.id,
+                "rank": rank,
+                "month_pesos": mp,
+                "spend_share": share_each,
+                "spendable": int(mp * share_each),
+                "tied": n > 1,
+                "tie_size": n,
+            })
+        rank += n
+        i = j
+    return entries
+
+
+def spend_share_for_rank(rank: int, tie_size: int = 1) -> float:
+    """Effective spend share for a rank group (tie_size competitors at the same score)."""
+    if tie_size < 1:
+        tie_size = 1
+    pooled = sum(PLACE_SPEND_SHARE.get(rank + k, 0.0) for k in range(tie_size))
+    return pooled / tie_size
+
+
 def peso_level(total_pesos: int) -> int:
     """One gamified level per 25 pesos earned."""
     return (total_pesos or 0) // PESOS_PER_LEVEL + 1

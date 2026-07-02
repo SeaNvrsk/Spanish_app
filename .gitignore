@@ -8,6 +8,9 @@ backend/tips_cache/
 backend/translate_cache/
 backend/app/translate_cache/
 backend/app/tips_cache/
+backend/app/vocab_images/*.png
+backend/app/vocab_images/*.webp
+backend/app/vocab_images/*.jpg
 .env
 backend/.env
 *.env

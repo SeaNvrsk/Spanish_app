@@ -18,6 +18,7 @@ from typing import Dict, List, Optional
 from .program import WEEKS, t
 from .a1_boost import A1_BOOST
 from .a1_boost_extra import A1_BOOST_EXTRA
+from ..vocab_images import attach_image, image_url_for
 
 AVATARS = ["🦊", "🐱", "🐶", "🐼", "🦉", "🐸", "🦁", "🐨", "🐵", "🦄", "🐷", "🐯"]
 
@@ -87,7 +88,7 @@ REVIEW_THEORY = {
 
 def _vi(raw):
     es, en, ru = raw
-    return {"es": es, "translations": {"en": en, "ru": ru}}
+    return attach_image({"es": es, "translations": {"en": en, "ru": ru}})
 
 
 def _norm(text: str) -> str:
@@ -118,21 +119,28 @@ def _est_minutes(exercises: List[dict], has_theory: bool = False) -> int:
 def _cloze_exercise(ex_id, chunk):
     """Fill-in-the-blank in a real sentence (contextual active recall)."""
     filled = chunk["template"].replace("___", chunk["answer"])
-    return {
+    out = {
         "id": ex_id, "type": "cloze",
         "template": chunk["template"], "answer": chunk["answer"], "sentence": filled,
         "es": chunk["answer"],
         "translations": {"en": chunk["en"], "ru": chunk["ru"]},
         "audio": filled,
     }
+    url = image_url_for(chunk["answer"])
+    if url:
+        out["image_url"] = url
+    return out
 
 
 def _speak_exercise(ex_id, v):
     """Pronunciation practice: the learner records and gets a score."""
-    return {
+    out = {
         "id": ex_id, "type": "speak",
         "es": v["es"], "translations": v["translations"], "audio": v["es"],
     }
+    if v.get("image_url"):
+        out["image_url"] = v["image_url"]
+    return out
 
 
 def _quiz_exercise(rng, ex_id, v, pool, i):
@@ -140,6 +148,8 @@ def _quiz_exercise(rng, ex_id, v, pool, i):
     types = ["choice_es_to_native", "listen", "choice_native_to_es", "translate"]
     ex_type = types[i % len(types)]
     base = {"id": ex_id, "es": v["es"], "translations": v["translations"], "audio": v["es"]}
+    if v.get("image_url"):
+        base["image_url"] = v["image_url"]
 
     def distractors(n=3):
         cands = [c for c in pool if c["es"] != v["es"]]
@@ -230,6 +240,7 @@ def _day_lesson(lid, week_meta, day_in_week, global_day, new_vocab, review_pool,
         exercises.append({
             "id": f"{lid}-fc{i}", "type": "flashcard",
             "es": v["es"], "translations": v["translations"], "audio": v["es"],
+            **({"image_url": v["image_url"]} if v.get("image_url") else {}),
         })
 
     # 2) Retrieval practice on the new words (mixed types)

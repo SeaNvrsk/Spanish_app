@@ -9,7 +9,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, DailyActivity
 from ..family import competitors, FAMILY_COMPETITORS, is_competitor
-from ..gamification import PLACE_SPEND_SHARE
+from ..gamification import month_rankings
 
 router = APIRouter(prefix="/api/rewards", tags=["rewards"])
 
@@ -31,11 +31,6 @@ def _month_pesos_by_user(db: Session, start: date):
     return {uid: int(x or 0) for uid, x in rows}
 
 
-def _spendable(month_pesos: int, rank: int, carryover: int) -> int:
-    share = PLACE_SPEND_SHARE.get(rank, 0.0)
-    return int(month_pesos * share) + (carryover or 0)
-
-
 @router.get("/summary")
 def summary(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
     today = date.today()
@@ -43,34 +38,37 @@ def summary(current: User = Depends(get_current_user), db: Session = Depends(get
     days_left = (end - today).days
 
     pesos_map = _month_pesos_by_user(db, start)
-    ranked = sorted(
-        competitors(db),
-        key=lambda u: (-pesos_map.get(u.id, 0), u.id),
-    )
+    comp = competitors(db)
+    ranked = month_rankings(comp, pesos_map)
+    by_id = {u.id: u for u in comp}
 
     entries = []
     my = None
-    for i, u in enumerate(ranked, start=1):
-        mp = pesos_map.get(u.id, 0)
-        share = PLACE_SPEND_SHARE.get(i, 0.0)
+    for row in ranked:
+        u = by_id[row["user_id"]]
+        share = row["spend_share"]
         entry = {
-            "rank": i,
+            "rank": row["rank"],
             "id": u.id,
             "name": u.name,
             "avatar": u.avatar,
-            "month_pesos": mp,
-            "spend_percent": int(share * 100),
-            "spendable": int(mp * share),
+            "month_pesos": row["month_pesos"],
+            "spend_percent": round(share * 100),
+            "spendable": row["spendable"],
+            "tied": row["tied"],
+            "tie_size": row["tie_size"],
             "is_me": u.id == current.id,
         }
         entries.append(entry)
         if u.id == current.id:
             my = {
-                "rank": i,
-                "month_pesos": mp,
+                "rank": row["rank"],
+                "month_pesos": row["month_pesos"],
                 "carryover": current.carryover_pesos or 0,
-                "spend_percent": int(share * 100),
-                "spendable": _spendable(mp, i, current.carryover_pesos),
+                "spend_percent": round(share * 100),
+                "spendable": row["spendable"] + (current.carryover_pesos or 0),
+                "tied": row["tied"],
+                "tie_size": row["tie_size"],
                 "is_admin": False,
             }
 
@@ -81,6 +79,8 @@ def summary(current: User = Depends(get_current_user), db: Session = Depends(get
             "carryover": 0,
             "spend_percent": 0,
             "spendable": 0,
+            "tied": False,
+            "tie_size": 1,
             "is_admin": True,
             "excluded": True,
         }
@@ -103,13 +103,13 @@ def carryover(current: User = Depends(get_current_user), db: Session = Depends(g
     start, _ = _month_bounds(today)
     pesos_map = _month_pesos_by_user(db, start)
 
-    ranked = sorted(competitors(db), key=lambda u: (-pesos_map.get(u.id, 0), u.id))
-    my_rank = next((i for i, u in enumerate(ranked, start=1) if u.id == current.id), None)
-    if not is_competitor(current) or my_rank is None:
+    ranked = month_rankings(competitors(db), pesos_map)
+    my_row = next((r for r in ranked if r["user_id"] == current.id), None)
+    if not is_competitor(current) or my_row is None:
         raise HTTPException(status_code=403, detail="Not eligible for carryover")
 
-    mp = pesos_map.get(current.id, 0)
-    share = PLACE_SPEND_SHARE.get(my_rank, 0.0)
-    current.carryover_pesos = int(mp * share) + (current.carryover_pesos or 0)
+    mp = my_row["month_pesos"]
+    spendable = my_row["spendable"]
+    current.carryover_pesos = spendable + (current.carryover_pesos or 0)
     db.commit()
     return {"carryover": current.carryover_pesos}

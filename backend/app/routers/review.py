@@ -9,6 +9,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, Card, DailyActivity
 from ..curriculum.builder import build_quiz, all_vocab_pool
+from ..vocab_images import attach_image
 from ..gamification import update_streak, bump_daily, REVIEW_DAILY_PESOS_CAP
 
 router = APIRouter(prefix="/api/review", tags=["review"])
@@ -101,26 +102,40 @@ def status(current: User = Depends(get_current_user), db: Session = Depends(get_
     today = date.today()
     total = db.query(Card).filter(Card.user_id == current.id).count()
     due = db.query(Card).filter(Card.user_id == current.id, Card.due <= today).count()
-    return {"total_cards": total, "due": due}
+    practice = min(total, DAILY_QUEUE_LIMIT)
+    return {"total_cards": total, "due": due, "practice_available": practice}
 
 
 @router.get("/queue")
-def queue(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def queue(
+    mode: str = "due",
+    current: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """due = SRS words due today; practice = relearn any saved words from lessons."""
     today = date.today()
-    cards = (
-        db.query(Card)
-        .filter(Card.user_id == current.id, Card.due <= today)
-        .order_by(Card.due.asc())
-        .limit(DAILY_QUEUE_LIMIT)
-        .all()
-    )
+    q = db.query(Card).filter(Card.user_id == current.id)
+    if mode == "practice":
+        cards = (
+            q.order_by(Card.last_reviewed.asc().nullsfirst(), Card.word_es.asc())
+            .limit(DAILY_QUEUE_LIMIT)
+            .all()
+        )
+    else:
+        cards = (
+            q.filter(Card.due <= today)
+            .order_by(Card.due.asc())
+            .limit(DAILY_QUEUE_LIMIT)
+            .all()
+        )
     vocab = [
-        {"es": c.word_es, "translations": {"en": c.word_en, "ru": c.word_ru}}
+        attach_image({"es": c.word_es, "translations": {"en": c.word_en, "ru": c.word_ru}})
         for c in cards
     ]
-    exercises = build_quiz(vocab, all_vocab_pool(), seed=f"review-{current.id}-{today}") if vocab else []
+    exercises = build_quiz(vocab, all_vocab_pool(), seed=f"review-{current.id}-{today}-{mode}") if vocab else []
     return {
+        "mode": mode,
         "count": len(vocab),
-        "pesos_per_card": REVIEW_PESOS_PER_CARD,
+        "pesos_per_card": REVIEW_PESOS_PER_CARD if mode == "due" else 0,
         "exercises": exercises,
     }

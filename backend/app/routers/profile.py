@@ -6,6 +6,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, Card
 from ..schemas import AchievementsResponse, VocabularyResponse, VocabularyEntry
+from ..vocab_images import image_url_for
 
 router = APIRouter(prefix="/api", tags=["profile"])
 
@@ -30,6 +31,7 @@ def vocabulary(current: User = Depends(get_current_user), db: Session = Depends(
             word_ru=c.word_ru or "",
             reps=c.reps or 0,
             lapses=c.lapses or 0,
+            image_url=image_url_for(c.word_es),
         )
         for c in cards
     ]
