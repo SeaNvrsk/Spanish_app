@@ -19,7 +19,7 @@ def update_me(
         current.name = payload.name
     if payload.avatar is not None:
         current.avatar = payload.avatar
-    if payload.ui_language is not None and payload.ui_language in ("en", "ru", "es"):
+    if payload.ui_language is not None and payload.ui_language in ("en", "ru"):
         current.ui_language = payload.ui_language
     db.commit()
     db.refresh(current)

@@ -65,8 +65,17 @@ def _migrate_xp_to_pesos():
         ))
 
 
+def _drop_spanish_ui():
+    """Spanish is no longer a UI language — keep Russian/English only."""
+    with engine.begin() as conn:
+        if not inspect(engine).has_table("users"):
+            return
+        conn.execute(text("UPDATE users SET ui_language = 'ru' WHERE ui_language = 'es'"))
+
+
 _ensure_columns()
 _migrate_xp_to_pesos()
+_drop_spanish_ui()
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 

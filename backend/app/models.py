@@ -24,7 +24,7 @@ class User(Base):
     name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     avatar = Column(String, default="🦊")  # emoji avatar, fun for family
-    ui_language = Column(String, default="en")  # en | ru | es
+    ui_language = Column(String, default="ru")  # ru | en
 
     # Legacy DB column name "xp" — stores pesos directly.
     pesos = Column("xp", Integer, default=0, nullable=False)

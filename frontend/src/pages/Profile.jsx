@@ -192,7 +192,7 @@ export default function Profile() {
         </div>
 
         <label className="mb-2 block text-xs font-bold text-slate-500">{t("interfaceLanguage")}</label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {LANGUAGES.map((l) => (
             <button
               key={l.code}

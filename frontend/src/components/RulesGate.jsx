@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "../auth";
-import { useI18n } from "../i18n";
+import { useI18n, personalWelcomeKey } from "../i18n";
 
-const RULES_VERSION = "v2";
+const RULES_VERSION = "v3";
 
 function rulesKey(userId) {
   return `family_rules_${RULES_VERSION}_${userId}`;
@@ -19,6 +19,23 @@ function RuleBlock({ icon, title, children }) {
         {icon} {title}
       </h3>
       <div className="space-y-2 text-[13px] leading-relaxed text-slate-600">{children}</div>
+    </div>
+  );
+}
+
+function PersonalWelcome({ name, t }) {
+  const welcomeKey = personalWelcomeKey(name);
+  if (!welcomeKey) return null;
+
+  const paragraphs = t(welcomeKey).split("\n").filter(Boolean);
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 p-4 shadow-sm">
+      <p className="mb-2 text-sm font-extrabold text-amber-900">💛 {t("rulesWelcomeTitle")}</p>
+      <div className="space-y-2 text-[13px] leading-relaxed text-amber-950">
+        {paragraphs.map((line) => (
+          <p key={line.slice(0, 24)}>{line}</p>
+        ))}
+      </div>
     </div>
   );
 }
@@ -48,6 +65,8 @@ export default function RulesGate({ children, forceShow = false, onClose }) {
             <p className="mt-2 text-center text-sm text-teal-100">{t("rulesIntro")}</p>
 
             <div className="mt-6 space-y-3">
+              <PersonalWelcome name={user.name} t={t} />
+
               <RuleBlock icon="$" title={t("rulesPesosTitle")}>
                 <p>{t("rulesPesosLesson")}</p>
                 <p>{t("rulesPesosExam")}</p>

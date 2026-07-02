@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from "react";
 
-// UI translations for the 3 interface languages.
+// UI translations for Russian and English interface languages.
 const STRINGS = {
   en: {
     appName: "Español para la Familia",
@@ -171,6 +171,13 @@ const STRINGS = {
     rulesQuarterBody: "At the end of each 3-month period (A1, A2, B1 stage), we place one family order on Mercado Libre with everyone's earned rewards.",
     rulesQuarterShip: "Prizes are ordered and shipped from Mercado Libre — you choose what you want within your balance.",
     rulesAdminNote: "As admin you can practice and see everyone's stats, but you are not ranked and do not receive prizes.",
+    rulesWelcomeTitle: "A message for you",
+    rulesWelcomeEva:
+      "Eva, we're so glad you're starting Mexican Spanish with our family!\nSpanish will open travel, new friendships, Mexican culture, and confidence abroad — skills you'll keep for life.\nOur program follows the international CEFR standard, starting at A1 — the same levels language schools and universities certify worldwide.\nKeep learning a little every day — very soon you'll be speaking for real!\nWe believe in you and wish you every success! 🇲🇽",
+    rulesWelcomeKristina:
+      "Kristina, we're so glad you're starting Mexican Spanish with our family!\nSpanish will open travel, new friendships, Mexican culture, and confidence abroad — skills you'll keep for life.\nOur program follows the international CEFR standard, starting at A1 — the same levels language schools and universities certify worldwide.\nKeep learning a little every day — very soon you'll be speaking for real!\nWe believe in you and wish you every success! 🇲🇽",
+    rulesWelcomeVeronika:
+      "Veronika, we're so glad you're starting Mexican Spanish with our family!\nSpanish will open travel, new friendships, Mexican culture, and confidence abroad — skills you'll keep for life.\nOur program follows the international CEFR standard, starting at A1 — the same levels language schools and universities certify worldwide.\nKeep learning a little every day — very soon you'll be speaking for real!\nWe believe in you and wish you every success! 🇲🇽",
     rulesAccept: "Got it — let's learn",
     viewRules: "Family rules",
     loadError: "Could not load the learning path. Is the server running?",
@@ -367,6 +374,13 @@ const STRINGS = {
     rulesQuarterBody: "В конце каждого 3-месячного этапа (A1, A2, B1) делаем один семейный заказ на Mercado Libre с накопленными наградами.",
     rulesQuarterShip: "Призы заказываются и отправляются с Mercado Libre — каждый выбирает, что хочет, в пределах своего баланса.",
     rulesAdminNote: "Как админ вы можете учиться и видеть статистику всех, но не участвуете в рейтинге и не получаете призы.",
+    rulesWelcomeTitle: "Личное сообщение для тебя",
+    rulesWelcomeEva:
+      "Ева, мы очень рады, что ты начинаешь изучать мексиканский испанский вместе с семьёй!\nЭтот язык откроет для тебя путешествия, новых друзей, мексиканскую культуру и уверенность за рубежом — навыки, которые останутся с тобой надолго.\nПрограмма построена по международной системе CEFR (уровень A1) — тому же стандарту, по которому сертифицируют языковые школы и вузы во всём мире.\nУчись понемногу каждый день — совсем скоро ты заговоришь по-новому!\nМы в тебя верим и желаем больших успехов! 🇲🇽",
+    rulesWelcomeKristina:
+      "Кристина, мы очень рады, что ты начинаешь изучать мексиканский испанский вместе с семьёй!\nЭтот язык откроет для тебя путешествия, новых друзей, мексиканскую культуру и уверенность за рубежом — навыки, которые останутся с тобой надолго.\nПрограмма построена по международной системе CEFR (уровень A1) — тому же стандарту, по которому сертифицируют языковые школы и вузы во всём мире.\nУчись понемногу каждый день — совсем скоро ты заговоришь по-новому!\nМы в тебя верим и желаем больших успехов! 🇲🇽",
+    rulesWelcomeVeronika:
+      "Вероника, мы очень рады, что ты начинаешь изучать мексиканский испанский вместе с семьёй!\nЭтот язык откроет для тебя путешествия, новых друзей, мексиканскую культуру и уверенность за рубежом — навыки, которые останутся с тобой надолго.\nПрограмма построена по международной системе CEFR (уровень A1) — тому же стандарту, по которому сертифицируют языковые школы и вузы во всём мире.\nУчись понемногу каждый день — совсем скоро ты заговоришь по-новому!\nМы в тебя верим и желаем больших успехов! 🇲🇽",
     rulesAccept: "Понятно — начинаем",
     viewRules: "Правила семьи",
     loadError: "Не удалось загрузить программу. Сервер, возможно, не запущен.",
@@ -406,222 +420,33 @@ const STRINGS = {
     ach_pesos_50: "$50 заработано",
     ach_pesos_200: "$200 заработано",
   },
-  es: {
-    appName: "Español para la Familia",
-    tagline: "Aprendan español mexicano juntos 🇲🇽",
-    login: "Iniciar sesión",
-    register: "Registrarse",
-    email: "Correo",
-    name: "Nombre",
-    password: "Contraseña",
-    createAccount: "Crear cuenta",
-    haveAccount: "¿Ya tienes cuenta?",
-    noAccount: "¿Eres nuevo?",
-    chooseAvatar: "Elige tu avatar",
-    loginError: "Correo o contraseña incorrectos",
-    registerError: "No se pudo registrar. El correo quizá ya existe.",
-    welcomeBack: "¡Bienvenido de nuevo!",
-    joinFamily: "Únete a tu familia",
-    learn: "Aprender",
-    ranking: "Ranking",
-    profile: "Perfil",
-    logout: "Salir",
-    translatorShort: "Traducir",
-    conjugatorShort: "Verbos",
-    translator: "RU → español mexicano",
-    conjugator: "Conjugador de verbos",
-    translatorHint: "Ruso → español mexicano (no de España). Con IA.",
-    conjugatorHint: "Escribe un infinitivo (-ar / -er / -ir). Solo pronombres mexicanos.",
-    translatePlaceholder: "Escribe en ruso…",
-    verbPlaceholder: "ej. hablar, tener, ir",
-    translateBtn: "Traducir",
-    conjugateBtn: "Conjugar",
-    translateError: "No se pudo traducir. Revisa la API o intenta de nuevo.",
-    conjugateError: "No se pudo conjugar este verbo.",
-    mexicanSpanish: "Español mexicano",
-    noVosotros: "Español mexicano — ustedes (sin vosotros)",
-    tensePresent: "Presente",
-    tensePreterite: "Pretérito",
-    tenseImperfect: "Imperfecto",
-    tenseFuture: "Futuro",
-    yourGoal: "Tu meta",
-    goalText: "A1 en 3 meses · A2 en 6 · B1 en 12",
-    day: "día",
-    days: "días",
-    streak: "racha",
-    level: "Nivel",
-    continueLearning: "Continuar aprendiendo",
-    start: "Empezar",
-    review: "Repasar",
-    locked: "Bloqueado",
-    completed: "Completado",
-    lessonsDone: "lecciones hechas",
-    months: "meses",
-    listenPrompt: "Toca la palabra que escuchas",
-    choosePrompt: "¿Qué significa esto?",
-    chooseEsPrompt: "Elige la palabra en español",
-    typePrompt: "Escríbelo en español",
-    tapToHear: "Toca para escuchar",
-    check: "Revisar",
-    continue: "Continuar",
-    correct: "¡Correcto!",
-    incorrect: "Casi",
-    theAnswer: "Respuesta",
-    gotIt: "Entendido",
-    lessonComplete: "¡Lección completa!",
-    youEarned: "Ganaste",
-    pesoSymbol: "$",
-    backToLessons: "A las lecciones",
-    typeHere: "Escribe aquí...",
-    skip: "Saltar",
-    exit: "Salir",
-    familyRanking: "Ranking familiar",
-    rankingSub: "¿Quién va ganando esta semana? 🏆",
-    you: "Tú",
-    allTimePesos: "Pesos totales",
-    settings: "Configuración",
-    interfaceLanguage: "Idioma de la interfaz",
-    yourStats: "Tus estadísticas",
-    lessonsCompleted: "Lecciones completadas",
-    currentStreak: "Racha actual",
-    longestStreak: "Mejor racha",
-    currentLevel: "Nivel actual",
-    rank: "Posición",
-    of: "de",
-    save: "Guardar",
-    saved: "¡Guardado!",
-    last30days: "Últimos 30 días",
-    voiceQuality: "Voz de pronunciación",
-    voiceServer: "Voz mexicana IA (alta calidad)",
-    voiceBrowser: "Voz del navegador (es-MX)",
-    theoryTitle: "Teoría",
-    grammarTitle: "Gramática",
-    examplesTitle: "Ejemplos",
-    tipTitle: "Tip mexicano",
-    startExercises: "Empezar ejercicios",
-    week: "Semana",
-    day: "Día",
-    reviewWeek: "Repaso",
-    examBonus: "Examen semanal · pesos extra",
-    finalExam: "Examen de graduación",
-    readTheory: "Teoría",
-    newWords: "palabras nuevas",
-    dayStreak: "días seguidos",
-    clozePrompt: "Completa el espacio",
-    speakPrompt: "Dilo en voz alta",
-    tapToRecord: "Toca y habla",
-    recordingNow: "Escuchando… toca para parar",
-    checkingPron: "Revisando…",
-    pronScore: "Pronunciación",
-    weHeard: "Escuchamos",
-    tryAgain: "Otra vez",
-    iSaidIt: "Ya lo dije",
-    greatAccent: "¡Buen acento! 🎉",
-    pronAccepted: "Pronunciación correcta",
-    closePron: "Casi — sigue practicando",
-    micHint: "Permite el micrófono para revisar tu pronunciación",
-    dailyReview: "Repaso diario",
-    reviewSubtitle: "Refuerza palabras aprendidas (repetición espaciada)",
-    reviewDueOne: "palabra por repasar",
-    reviewDueMany: "palabras por repasar",
-    startReview: "Empezar repaso",
-    noReviewTitle: "¡Todo al día! 🎉",
-    noReviewText: "No hay palabras por repasar ahora. ¡Sigue con lecciones nuevas!",
-    reviewComplete: "¡Repaso completo!",
-    minAbbr: "min",
-    pesos: "pesos",
-    pesosEarned: "pesos ganados",
-    monthlyChallenge: "Reto del mes",
-    challengeSub: "1º gasta 100% en Mercado Libre · 2º 75% · 3º 50%",
-    daysLeftLabel: "días restantes",
-    thisMonth: "este mes",
-    canSpend: "puede gastar",
-    carryOver: "Pasar al próximo mes",
-    carriedOver: "Pasado",
-    carryDone: "¡Pasado al próximo mes! 🎉",
-    allTimePesos: "Pesos totales",
-    prizeNote: "Al final del mes el ganador pide lo que quiera en Mercado Libre — o pasa el saldo al mes siguiente.",
-    adminBadge: "Admin",
-    adminExcluded: "Practicas sin competir — excluido del ranking familiar y premios mensuales.",
-    familyOverview: "Resumen familiar",
-    familyOverviewSub: "Progreso de 3 aprendices + tu práctica",
-    monthPesos: "este mes",
-    notInRanking: "Sin ranking",
-    rulesTitle: "Reglas del aprendizaje familiar",
-    rulesIntro: "Antes de empezar, lee cómo funcionan los pesos. Todos en la familia siguen las mismas reglas.",
-    rulesPesosTitle: "Pesos mexicanos (premios)",
-    rulesPesosLesson: "Lección diaria — hasta $5 (según tu puntaje; 100% = $5).",
-    rulesPesosExam: "Examen semanal — hasta $15 extra.",
-    rulesPesosReview: "Repaso diario — $1 por palabra correcta, máximo $5 al día.",
-    rulesPesosMonth: "Solo cuentan para el ranking mensual los pesos ganados en el mes calendario actual.",
-    rulesPlacesTitle: "Ranking mensual (3 aprendices)",
-    rulesPlace1: "1.er lugar — puede gastar el 100% de su saldo mensual en Mercado Libre.",
-    rulesPlace2: "2.º lugar — puede gastar el 75% de su saldo.",
-    rulesPlace3: "3.er lugar — puede gastar el 50% de su saldo.",
-    rulesCarryover: "El ganador puede pasar el saldo no usado al mes siguiente en lugar de pedir.",
-    rulesQuarterTitle: "Cada 3 meses — envío desde Mercado Libre",
-    rulesQuarterBody: "Al final de cada etapa de 3 meses (A1, A2, B1), hacemos un pedido familiar en Mercado Libre con las recompensas acumuladas.",
-    rulesQuarterShip: "Los premios se piden y envían desde Mercado Libre — cada uno elige lo que quiere dentro de su saldo.",
-    rulesAdminNote: "Como admin puedes practicar y ver las estadísticas de todos, pero no compites ni recibes premios.",
-    rulesAccept: "Entendido — empecemos",
-    viewRules: "Reglas familiares",
-    loadError: "No se pudo cargar el plan de estudio. ¿Está el servidor activo?",
-    retry: "Reintentar",
-    calendarDay: "Día del programa",
-    since: "desde",
-    lessonLocked: "Esta lección aún no está abierta",
-    unlocksOn: "Se abre el",
-    catchUpHint: "Verde — repasa lecciones que faltaron",
-    achievements: "Logros",
-    achievementsSub: "Desbloquea insignias mientras aprendes",
-    myVocabulary: "Mi vocabulario",
-    vocabularySub: "Palabras y expresiones que ya estudiaste",
-    noWordsYet: "Completa lecciones para llenar tu diccionario.",
-    wordsCount: "palabras aprendidas",
-    information: "Información",
-    infoLoading: "Cargando explicación…",
-    infoError: "No se pudo cargar la explicación. Intenta de nuevo.",
-    infoMeaning: "Significado",
-    infoMexicoUsage: "En México",
-    infoExample: "Ejemplo",
-    ach_welcome: "Bienvenido a la familia",
-    ach_first_lesson: "Primera lección",
-    ach_lessons_5: "5 lecciones",
-    ach_lessons_25: "25 lecciones",
-    ach_perfect_score: "Puntaje perfecto",
-    ach_three_stars: "Tres estrellas",
-    ach_streak_3: "Racha de 3 días",
-    ach_streak_7: "Racha de 7 días",
-    ach_streak_30: "Racha de 30 días",
-    ach_first_exam: "Primer examen",
-    ach_capstone: "Examen final",
-    ach_a1_complete: "A1 completado",
-    ach_review_master: "Maestro del repaso",
-    ach_vocab_25: "25 palabras",
-    ach_vocab_100: "100 palabras",
-    ach_pesos_50: "$50 ganados",
-    ach_pesos_200: "$200 ganados",
-  },
 };
 
+export const UI_LANGUAGES = ["ru", "en"];
+
+export function normalizeUiLang(code) {
+  if (code === "ru" || code === "en") return code;
+  return "ru";
+}
+
 export const LANGUAGES = [
-  { code: "en", label: "English", flag: "🇬🇧" },
   { code: "ru", label: "Русский", flag: "🇷🇺" },
-  { code: "es", label: "Español", flag: "🇪🇸" },
+  { code: "en", label: "English", flag: "🇬🇧" },
 ];
 
 const I18nContext = createContext(null);
 
 export function I18nProvider({ children }) {
-  const [lang, setLangState] = useState(() => localStorage.getItem("ui_lang") || "en");
+  const [lang, setLangState] = useState(() => normalizeUiLang(localStorage.getItem("ui_lang") || "ru"));
 
   const setLang = useCallback((l) => {
-    setLangState(l);
-    localStorage.setItem("ui_lang", l);
+    const next = normalizeUiLang(l);
+    setLangState(next);
+    localStorage.setItem("ui_lang", next);
   }, []);
 
   const t = useCallback(
-    (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key,
+    (key) => (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.ru[key] || STRINGS.en[key] || key,
     [lang]
   );
 
@@ -637,9 +462,25 @@ export function useI18n() {
 }
 
 // Pick the learner's native translation of a Spanish word.
-// Spanish UI falls back to English glosses.
 export function achievementLabel(id, t) {
   return t(`ach_${id}`) || id;
+}
+
+const WELCOME_BY_NAME = {
+  eva: "rulesWelcomeEva",
+  ева: "rulesWelcomeEva",
+  kristina: "rulesWelcomeKristina",
+  christina: "rulesWelcomeKristina",
+  кристина: "rulesWelcomeKristina",
+  veronika: "rulesWelcomeVeronika",
+  veronica: "rulesWelcomeVeronika",
+  вероника: "rulesWelcomeVeronika",
+};
+
+export function personalWelcomeKey(name) {
+  if (!name) return null;
+  const key = name.trim().toLowerCase();
+  return WELCOME_BY_NAME[key] || null;
 }
 
 export function nativeGloss(translations, lang) {
@@ -648,8 +489,9 @@ export function nativeGloss(translations, lang) {
   return translations.en;
 }
 
-// Localized field from backend ({en, ru, es}) objects.
+// Localized field from backend ({en, ru, es}) curriculum objects.
 export function localized(obj, lang) {
   if (!obj) return "";
-  return obj[lang] || obj.en || "";
+  if (lang === "ru") return obj.ru || obj.en || "";
+  return obj.en || obj.ru || "";
 }

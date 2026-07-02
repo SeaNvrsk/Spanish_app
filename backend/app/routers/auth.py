@@ -28,7 +28,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         name=payload.name,
         hashed_password=hash_password(payload.password),
         avatar=payload.avatar or "🦊",
-        ui_language=payload.ui_language or "en",
+        ui_language=payload.ui_language or "ru",
         is_admin=payload.email.lower() in _admin_emails() or payload.name == "Anatolii",
     )
     db.add(user)

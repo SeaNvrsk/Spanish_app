@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import api from "./api";
-import { useI18n } from "./i18n";
+import { useI18n, normalizeUiLang } from "./i18n";
 
 const AuthContext = createContext(null);
 
@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get("/auth/me");
       setUser(data);
-      if (data.ui_language) setLang(data.ui_language);
+      if (data.ui_language) setLang(normalizeUiLang(data.ui_language));
       return data;
     } catch {
       setUser(null);
