@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, LessonProgress, DailyActivity
+from ..msk_time import msk_today, msk_month_start
 from ..schemas import (
     LeaderboardEntry,
     StatsResponse,
@@ -44,7 +45,7 @@ def _cefr_progress(db: Session, user: User):
 
 
 def _month_pesos(db: Session, user_id: int) -> int:
-    start = date.today().replace(day=1)
+    start = msk_month_start()
     total = (
         db.query(func.sum(DailyActivity.pesos))
         .filter(DailyActivity.user_id == user_id, DailyActivity.day >= start)
@@ -84,7 +85,7 @@ def stats(current: User = Depends(get_current_user), db: Session = Depends(get_d
         rank = next((i for i, u in enumerate(comp, start=1) if u.id == current.id), total_competitors)
         total_users = total_competitors
 
-    start = date.today() - timedelta(days=29)
+    start = msk_today() - timedelta(days=29)
     rows = (
         db.query(DailyActivity)
         .filter(DailyActivity.user_id == current.id, DailyActivity.day >= start)
@@ -112,7 +113,7 @@ def family_overview(current: User = Depends(get_current_user), db: Session = Dep
     if not current.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    month = date.today().strftime("%Y-%m")
+    month = msk_today().strftime("%Y-%m")
     pesos_map = {u.id: _month_pesos(db, u.id) for u in competitors(db)}
     comp_ranked = month_rankings(competitors(db), pesos_map)
     comp_rank = {row["user_id"]: row["rank"] for row in comp_ranked}

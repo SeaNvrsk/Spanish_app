@@ -33,7 +33,7 @@ export default function Review() {
 
   const handleFinish = async (results) => {
     try {
-      const award = mode === "due";
+      const award = true;
       const { data } = await api.post("/review/grade", { items: results, award_pesos: award });
       setFinished({ ...data, mode });
       refresh();
@@ -53,9 +53,9 @@ export default function Review() {
       <div className="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-indigo-600 to-purple-700 px-5 py-8 text-center text-white sm:px-6">
         <div className="animate-pop text-7xl">🧠</div>
         <h1 className="mt-4 text-2xl font-extrabold">{t("reviewComplete")}</h1>
-        {finished.mode === "due" && (finished.pesos_earned || 0) > 0 && (
+        {(finished.pesos_earned || 0) > 0 && (
           <div className="mt-6 rounded-2xl bg-white/15 px-8 py-5">
-            <div className="text-4xl font-black">${finished.pesos_earned}</div>
+            <div className="text-4xl font-black">${Number(finished.pesos_earned).toFixed(1)}</div>
             <div className="text-xs text-indigo-100">{t("pesos")}</div>
           </div>
         )}

@@ -3,6 +3,7 @@
 from datetime import date, timedelta
 
 from .config import get_settings
+from .msk_time import msk_today
 
 
 def program_start() -> date:
@@ -24,13 +25,13 @@ def unlock_date_for_day(global_day: int, start: date | None = None) -> date:
 
 def max_unlocked_global_day(today: date | None = None, start: date | None = None) -> int:
     """Highest lesson `day` index (1–365) unlocked on this calendar date."""
-    today = today or date.today()
+    today = today or msk_today()
     start = start or program_start()
     return program_day_for_date(today, start)
 
 
 def is_lesson_unlocked(lesson_global_day: int, today: date | None = None, start: date | None = None) -> bool:
-    today = today or date.today()
+    today = today or msk_today()
     start = start or program_start()
     if today < start:
         return False
@@ -38,7 +39,7 @@ def is_lesson_unlocked(lesson_global_day: int, today: date | None = None, start:
 
 
 def lesson_schedule_meta(lesson_global_day: int, today: date | None = None, start: date | None = None) -> dict:
-    today = today or date.today()
+    today = today or msk_today()
     start = start or program_start()
     unlocked = is_lesson_unlocked(lesson_global_day, today, start)
     prog_day = program_day_for_date(today, start)

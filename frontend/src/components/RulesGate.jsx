@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../auth";
 import { useI18n, personalWelcomeKey } from "../i18n";
 
-const RULES_VERSION = "v8";
+const RULES_VERSION = "v11";
 
 function rulesKey(userId) {
   return `family_rules_${RULES_VERSION}_${userId}`;
@@ -81,6 +81,7 @@ export default function RulesGate({ children, forceShow = false, onClose }) {
                 <p>{t("rulesPesosReview")}</p>
                 <p>{t("rulesPesosRetry")}</p>
                 <p>{t("rulesPesosMonth")}</p>
+                <p className="text-xs text-slate-500">{t("rulesTimezone")}</p>
               </RuleBlock>
 
               <RuleBlock icon="🏆" title={t("rulesPlacesTitle")}>

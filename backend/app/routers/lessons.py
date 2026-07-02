@@ -15,6 +15,7 @@ from ..schedule import (
     max_unlocked_global_day,
     lesson_schedule_meta,
 )
+from ..msk_time import msk_today
 
 router = APIRouter(prefix="/api", tags=["curriculum"])
 
@@ -38,7 +39,7 @@ def curriculum(current: User = Depends(get_current_user), db: Session = Depends(
     rows = db.query(LessonProgress).filter(LessonProgress.user_id == current.id).all()
     progress = {p.lesson_id: p for p in rows}
 
-    today = date.today()
+    today = msk_today()
     start = program_start()
     prog_day = program_day_for_date(today, start)
     today_lesson_id = None
@@ -90,6 +91,8 @@ def curriculum(current: User = Depends(get_current_user), db: Session = Depends(
             "id": level["id"],
             "level": level["level"],
             "months": level["months"],
+            "months_from": level.get("months_from"),
+            "months_to": level.get("months_to"),
             "title": level["title"],
             "description": level["description"],
             "weeks": out_weeks,

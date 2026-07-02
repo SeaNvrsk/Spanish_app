@@ -21,6 +21,7 @@ def _ensure_columns():
         "users": [
             ("carryover_pesos", "INTEGER NOT NULL DEFAULT 0"),
             ("is_admin", "INTEGER NOT NULL DEFAULT 0"),
+            ("peso_tenths", "INTEGER NOT NULL DEFAULT 0"),
         ],
         "daily_activity": [("review_xp", "INTEGER NOT NULL DEFAULT 0")],
     }

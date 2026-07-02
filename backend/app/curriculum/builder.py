@@ -50,6 +50,7 @@ PRONOUN_DRILL_TEMPLATES = [
 ]
 
 LEVEL_MONTHS = {"A1": 3, "A2": 6, "B1": 12}
+LEVEL_MONTH_RANGE = {"A1": (1, 3), "A2": (4, 6), "B1": (7, 12)}
 LEVEL_TITLE = {
     "A1": t("A1 — Beginner", "A1 — Начальный", "A1 — Principiante"),
     "A2": t("A2 — Elementary", "A2 — Базовый", "A2 — Elemental"),
@@ -467,6 +468,8 @@ def get_curriculum() -> List[dict]:
     for lv in order:
         levels.append({
             "id": lv.lower(), "level": lv, "months": LEVEL_MONTHS[lv],
+            "months_from": LEVEL_MONTH_RANGE[lv][0],
+            "months_to": LEVEL_MONTH_RANGE[lv][1],
             "title": LEVEL_TITLE[lv], "description": LEVEL_DESC[lv],
             "weeks": grouped[lv],
         })

@@ -1,4 +1,3 @@
-import calendar
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -10,14 +9,16 @@ from ..deps import get_current_user
 from ..models import User, DailyActivity
 from ..family import competitors, FAMILY_COMPETITORS, is_competitor
 from ..gamification import month_rankings
+from ..msk_time import msk_today, msk_month_start, msk_month_end, msk_days_left_in_month
+
 
 router = APIRouter(prefix="/api/rewards", tags=["rewards"])
 
 
-def _month_bounds(today: date):
-    start = today.replace(day=1)
-    last_day = calendar.monthrange(today.year, today.month)[1]
-    end = today.replace(day=last_day)
+def _month_bounds(today: date | None = None):
+    today = today or msk_today()
+    start = msk_month_start(today)
+    end = msk_month_end(today)
     return start, end
 
 
@@ -33,9 +34,9 @@ def _month_pesos_by_user(db: Session, start: date):
 
 @router.get("/summary")
 def summary(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    today = date.today()
+    today = msk_today()
     start, end = _month_bounds(today)
-    days_left = (end - today).days
+    days_left = msk_days_left_in_month(today)
 
     pesos_map = _month_pesos_by_user(db, start)
     comp = competitors(db)
@@ -99,7 +100,7 @@ def carryover(current: User = Depends(get_current_user), db: Session = Depends(g
     if current.is_admin:
         raise HTTPException(status_code=403, detail="Admin is excluded from the monthly prize pool")
 
-    today = date.today()
+    today = msk_today()
     start, _ = _month_bounds(today)
     pesos_map = _month_pesos_by_user(db, start)
 

@@ -9,6 +9,7 @@ from ..models import User, LessonProgress
 from ..schemas import LessonResult, CompleteResponse
 from ..curriculum import get_lesson
 from ..schedule import lesson_schedule_meta
+from ..msk_time import msk_today, msk_now
 from ..gamification import (
     peso_level as _peso_level,
     update_streak as _update_streak,
@@ -88,13 +89,13 @@ def complete_lesson(
     if passed:
         prog.completed = True
     prog.pesos_earned += earned
-    prog.last_completed_at = datetime.utcnow()
+    prog.last_completed_at = msk_now().replace(tzinfo=None)
 
     before_level = _peso_level(current.pesos)
     current.pesos += earned
     after_level = _peso_level(current.pesos)
 
-    today = date.today()
+    today = msk_today()
     if earned > 0 or new_completion:
         _update_streak(current, today)
     _bump_daily(db, current, today, earned, new_completion)

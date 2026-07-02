@@ -14,6 +14,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship
 
 from .database import Base
+from .msk_time import msk_today, msk_now
 
 
 class User(Base):
@@ -28,6 +29,8 @@ class User(Base):
 
     # Legacy DB column name "xp" — stores pesos directly.
     pesos = Column("xp", Integer, default=0, nullable=False)
+    # Fractional pesos from review (0.1 steps); 0–9 tenths carried on the user.
+    peso_tenths = Column(Integer, default=0, nullable=False)
     current_streak = Column(Integer, default=0, nullable=False)
     longest_streak = Column(Integer, default=0, nullable=False)
     last_active_date = Column(Date, nullable=True)
@@ -77,7 +80,7 @@ class Card(Base):
     interval = Column(Integer, default=0, nullable=False)   # days until next review
     reps = Column(Integer, default=0, nullable=False)       # successful reviews in a row
     lapses = Column(Integer, default=0, nullable=False)     # times forgotten
-    due = Column(Date, default=date.today, nullable=False, index=True)
+    due = Column(Date, default=msk_today, nullable=False, index=True)
     last_reviewed = Column(DateTime, nullable=True)
 
     user = relationship("User")
@@ -89,9 +92,9 @@ class DailyActivity(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    day = Column(Date, default=date.today, nullable=False)
+    day = Column(Date, default=msk_today, nullable=False)
     pesos = Column("xp", Integer, default=0, nullable=False)
-    review_pesos = Column("review_xp", Integer, default=0, nullable=False)
+    review_pesos = Column("review_xp", Integer, default=0, nullable=False)  # tenths earned today (cap 50)
     lessons_completed = Column(Integer, default=0, nullable=False)
 
     user = relationship("User", back_populates="activity")

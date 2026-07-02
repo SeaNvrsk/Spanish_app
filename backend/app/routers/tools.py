@@ -55,9 +55,8 @@ class ExplainRequest(BaseModel):
 
 class ExplainResponse(BaseModel):
     spanish: str
-    meaning: str
-    mexico_usage: str
-    example: str
+    explanation_ru: str
+    example_es: str
     cached: bool = False
 
 
@@ -165,19 +164,17 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
         )
 
     gloss_parts = []
-    if context_en:
-        gloss_parts.append(f"English gloss: {context_en}")
     if context_ru:
-        gloss_parts.append(f"Russian gloss: {context_ru}")
-    gloss = "\n".join(gloss_parts) if gloss_parts else "No translation provided."
+        gloss_parts.append(f"Перевод: {context_ru}")
+    elif context_en:
+        gloss_parts.append(f"Gloss: {context_en}")
+    gloss = "\n".join(gloss_parts) if gloss_parts else "Без перевода."
 
     system = (
-        "You teach Mexican Spanish (es-MX) to a family learner. "
-        "Explain the given word or short phrase clearly and practically. "
-        "Focus on how it is used in Mexico (register, context, alternatives). "
+        "You teach Mexican Spanish (es-MX) to Russian-speaking learners. "
         "Return ONLY valid JSON: "
-        '{"meaning": "short core meaning", "mexico_usage": "2-3 sentences about Mexican usage", '
-        '"example": "one natural Mexican Spanish example sentence"}'
+        '{"explanation_ru": "2-4 clear sentences IN RUSSIAN: core meaning, register, when to use it in Mexico", '
+        '"example_es": "one short natural example sentence IN SPANISH ONLY (Mexican usage)"}'
     )
     user = f"Word/phrase: {spanish}\n{gloss}"
 
@@ -200,12 +197,27 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
         raise HTTPException(status_code=502, detail="Explanation service error")
     raw = resp.json()["choices"][0]["message"]["content"]
     data = json.loads(raw)
-    meaning = (data.get("meaning") or "").strip()
-    mexico_usage = (data.get("mexico_usage") or "").strip()
-    example = (data.get("example") or "").strip()
-    if not meaning or not mexico_usage:
+    explanation_ru = (data.get("explanation_ru") or "").strip()
+    example_es = (data.get("example_es") or "").strip()
+    if not explanation_ru:
         raise HTTPException(status_code=502, detail="Empty explanation")
-    return {"meaning": meaning, "mexico_usage": mexico_usage, "example": example or meaning}
+    return {"explanation_ru": explanation_ru, "example_es": example_es or spanish}
+
+
+def _normalize_explain_cached(cached: dict, spanish: str) -> dict:
+    """Support legacy English cache entries."""
+    if cached.get("explanation_ru"):
+        return {
+            "explanation_ru": cached["explanation_ru"].strip(),
+            "example_es": (cached.get("example_es") or spanish).strip(),
+        }
+    meaning = (cached.get("meaning") or "").strip()
+    usage = (cached.get("mexico_usage") or "").strip()
+    parts = [p for p in (meaning, usage) if p]
+    return {
+        "explanation_ru": "\n".join(parts) if parts else spanish,
+        "example_es": (cached.get("example") or cached.get("example_es") or spanish).strip(),
+    }
 
 
 @router.get("/tenses")
@@ -243,16 +255,11 @@ def conjugate_verb(body: ConjugateRequest, _: User = Depends(get_current_user)):
 @router.post("/explain", response_model=ExplainResponse)
 async def explain_spanish(body: ExplainRequest, _: User = Depends(get_current_user)):
     spanish = body.spanish.strip()
-    key = _cache_key(f"{spanish}|{body.context_en}|{body.context_ru}")
+    key = _cache_key(f"ru-v2|{spanish}|{body.context_ru}|{body.context_en}")
     cached = _load_explain(key)
     if cached:
-        return ExplainResponse(
-            spanish=spanish,
-            meaning=cached["meaning"],
-            mexico_usage=cached["mexico_usage"],
-            example=cached.get("example") or cached["meaning"],
-            cached=True,
-        )
+        norm = _normalize_explain_cached(cached, spanish)
+        return ExplainResponse(spanish=spanish, cached=True, **norm)
 
     result = await _explain_ai(spanish, body.context_en.strip(), body.context_ru.strip())
     _store_explain(key, result)

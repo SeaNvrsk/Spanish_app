@@ -75,7 +75,9 @@ function GoalPath({ levels, t }) {
                   {isComplete && <span className="text-sm">✓</span>}
                 </div>
                 <span className="text-[11px] font-bold text-teal-100">
-                  {lvl.months} {t("months")}
+                  {lvl.months_from && lvl.months_to
+                    ? `${t("month")} ${lvl.months_from}–${lvl.months_to}`
+                    : `${lvl.months} ${t("months")}`}
                 </span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-black/20">
@@ -217,7 +219,9 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-500">{localized(lvl.description, lang)}</p>
               </div>
               <span className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-black text-teal-600">
-                {lvl.months} {t("months")}
+                {lvl.months_from && lvl.months_to
+                  ? `${t("month")} ${lvl.months_from}–${lvl.months_to}`
+                  : `${lvl.months} ${t("months")}`}
               </span>
             </div>
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100">

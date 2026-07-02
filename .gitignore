@@ -7,6 +7,7 @@ backend/tts_cache/
 backend/tips_cache/
 backend/translate_cache/
 backend/app/translate_cache/
+backend/app/explain_cache/
 backend/app/tips_cache/
 backend/app/vocab_images/*.png
 backend/app/vocab_images/*.webp

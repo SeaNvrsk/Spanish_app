@@ -448,19 +448,17 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
                         <p className="text-sm font-semibold text-red-500">{t("infoError")}</p>
                       )}
                       {infoData && !infoLoading && (
-                        <div className="space-y-2 text-sm text-slate-700">
-                          <p>
-                            <span className="font-extrabold text-slate-800">{t("infoMeaning")}: </span>
-                            {infoData.meaning}
-                          </p>
-                          <p>
-                            <span className="font-extrabold text-slate-800">{t("infoMexicoUsage")}: </span>
-                            {infoData.mexico_usage}
-                          </p>
-                          {infoData.example && (
-                            <p className="rounded-lg bg-teal-50 px-3 py-2 italic text-teal-800">
-                              “{infoData.example}”
-                            </p>
+                        <div className="space-y-3 text-sm text-slate-700">
+                          <p className="leading-relaxed">{infoData.explanation_ru}</p>
+                          {infoData.example_es && (
+                            <div className="rounded-lg bg-teal-50 px-3 py-2.5">
+                              <p className="text-[11px] font-bold uppercase tracking-wide text-teal-600">
+                                {t("infoExample")}
+                              </p>
+                              <p className="mt-1 text-base font-semibold italic text-teal-900">
+                                {infoData.example_es}
+                              </p>
+                            </div>
                           )}
                         </div>
                       )}

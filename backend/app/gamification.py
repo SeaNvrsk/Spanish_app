@@ -8,8 +8,10 @@ from .models import User, DailyActivity
 
 # --- Pesos reward economy ---------------------------------------------------
 PESOS_PER_LEVEL = 25
-# Anti-inflation: cap how many pesos the Daily Review can grant per day.
-REVIEW_DAILY_PESOS_CAP = 5
+# Anti-inflation: daily review pays 0.1 peso per correct answer, max 5 pesos/day total.
+REVIEW_TENTHS_PER_CORRECT = 1   # 0.1 peso
+REVIEW_DAILY_CAP_TENTHS = 50    # 5.0 pesos
+REVIEW_DAILY_PESOS_CAP = 5      # display cap (whole pesos)
 # Share of the monthly balance each podium place may actually spend.
 PLACE_SPEND_SHARE = {1: 1.0, 2: 0.75, 3: 0.5}
 
@@ -54,6 +56,29 @@ def spend_share_for_rank(rank: int, tie_size: int = 1) -> float:
         tie_size = 1
     pooled = sum(PLACE_SPEND_SHARE.get(rank + k, 0.0) for k in range(tie_size))
     return pooled / tie_size
+
+
+def apply_review_award(user: User, correct_count: int, already_review_tenths: int) -> dict:
+    """Award review pesos in 0.1 steps; shared daily cap across all review sessions."""
+    if correct_count <= 0:
+        return {"earned_tenths": 0, "pesos_whole": 0, "pesos_display": 0.0}
+
+    room = max(0, REVIEW_DAILY_CAP_TENTHS - (already_review_tenths or 0))
+    earned_tenths = min(correct_count * REVIEW_TENTHS_PER_CORRECT, room)
+    if earned_tenths <= 0:
+        return {"earned_tenths": 0, "pesos_whole": 0, "pesos_display": 0.0}
+
+    before = int(getattr(user, "peso_tenths", 0) or 0)
+    after = before + earned_tenths
+    pesos_whole = after // 10 - before // 10
+    user.peso_tenths = after % 10
+    user.pesos = (user.pesos or 0) + pesos_whole
+
+    return {
+        "earned_tenths": earned_tenths,
+        "pesos_whole": pesos_whole,
+        "pesos_display": round(earned_tenths / 10, 1),
+    }
 
 
 def peso_level(total_pesos: int) -> int:

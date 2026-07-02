@@ -10,12 +10,21 @@ from ..deps import get_current_user
 from ..models import User, Card, DailyActivity
 from ..curriculum.builder import build_quiz, all_vocab_pool
 from ..vocab_images import attach_image
-from ..gamification import update_streak, bump_daily, REVIEW_DAILY_PESOS_CAP
+from ..msk_time import msk_today, msk_now
+from ..gamification import (
+    update_streak,
+    bump_daily,
+    get_daily,
+    apply_review_award,
+    REVIEW_DAILY_CAP_TENTHS,
+    REVIEW_DAILY_PESOS_CAP,
+    REVIEW_TENTHS_PER_CORRECT,
+)
 
 router = APIRouter(prefix="/api/review", tags=["review"])
 
-REVIEW_PESOS_PER_CARD = 1
 DAILY_QUEUE_LIMIT = 20
+REVIEW_PESOS_PER_CARD = REVIEW_TENTHS_PER_CORRECT / 10  # 0.1 for API hints
 
 
 class GradeItem(BaseModel):
@@ -45,8 +54,8 @@ def _apply_sm2(card: Card, correct: bool):
         card.lapses += 1
         card.interval = 1
         card.ease = max(1.3, card.ease - 0.2)
-    card.due = date.today() + timedelta(days=card.interval)
-    card.last_reviewed = datetime.utcnow()
+    card.due = msk_today() + timedelta(days=card.interval)
+    card.last_reviewed = msk_now().replace(tzinfo=None)
 
 
 @router.post("/grade")
@@ -68,7 +77,7 @@ def grade(payload: GradePayload, current: User = Depends(get_current_user), db: 
             card = Card(
                 user_id=current.id, word_es=item.word_es,
                 word_en=item.word_en or "", word_ru=item.word_ru or "",
-                ease=2.5, interval=0, reps=0, lapses=0, due=date.today(),
+                ease=2.5, interval=0, reps=0, lapses=0, due=msk_today(),
             )
             db.add(card)
         cache[item.word_es] = card
@@ -77,21 +86,23 @@ def grade(payload: GradePayload, current: User = Depends(get_current_user), db: 
             correct_count += 1
         updated += 1
 
-    pesos_earned = 0
+    pesos_earned = 0.0
     if payload.award_pesos and correct_count:
-        today = date.today()
-        today_row = (
-            db.query(DailyActivity)
-            .filter(DailyActivity.user_id == current.id, DailyActivity.day == today)
-            .first()
-        )
-        already = (today_row.review_pesos or 0) if today_row else 0
-        allowed = max(0, REVIEW_DAILY_PESOS_CAP - already)
-        pesos_earned = min(correct_count * REVIEW_PESOS_PER_CARD, allowed)
-        if pesos_earned > 0:
-            current.pesos += pesos_earned
+        today = msk_today()
+        daily = get_daily(db, current, today)
+        already_tenths = daily.review_pesos or 0
+        award = apply_review_award(current, correct_count, already_tenths)
+        if award["earned_tenths"] > 0:
+            bump_daily(
+                db,
+                current,
+                today,
+                award["pesos_whole"],
+                completed=False,
+                review_pesos=award["earned_tenths"],
+            )
             update_streak(current, today)
-            bump_daily(db, current, today, pesos_earned, completed=False, review_pesos=pesos_earned)
+            pesos_earned = award["pesos_display"]
 
     db.commit()
     return {"updated": updated, "pesos_earned": pesos_earned, "total_pesos": current.pesos}
@@ -99,11 +110,24 @@ def grade(payload: GradePayload, current: User = Depends(get_current_user), db: 
 
 @router.get("/status")
 def status(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    today = date.today()
+    today = msk_today()
     total = db.query(Card).filter(Card.user_id == current.id).count()
     due = db.query(Card).filter(Card.user_id == current.id, Card.due <= today).count()
     practice = min(total, DAILY_QUEUE_LIMIT)
-    return {"total_cards": total, "due": due, "practice_available": practice}
+    daily = (
+        db.query(DailyActivity)
+        .filter(DailyActivity.user_id == current.id, DailyActivity.day == today)
+        .first()
+    )
+    review_tenths_today = (daily.review_pesos or 0) if daily else 0
+    return {
+        "total_cards": total,
+        "due": due,
+        "practice_available": practice,
+        "review_pesos_today": round(review_tenths_today / 10, 1),
+        "review_pesos_cap": REVIEW_DAILY_PESOS_CAP,
+        "review_tenths_remaining": max(0, REVIEW_DAILY_CAP_TENTHS - review_tenths_today),
+    }
 
 
 @router.get("/queue")
@@ -113,7 +137,7 @@ def queue(
     db: Session = Depends(get_db),
 ):
     """due = SRS words due today; practice = relearn any saved words from lessons."""
-    today = date.today()
+    today = msk_today()
     q = db.query(Card).filter(Card.user_id == current.id)
     if mode == "practice":
         cards = (
@@ -136,6 +160,6 @@ def queue(
     return {
         "mode": mode,
         "count": len(vocab),
-        "pesos_per_card": REVIEW_PESOS_PER_CARD if mode == "due" else 0,
+        "pesos_per_card": REVIEW_PESOS_PER_CARD,
         "exercises": exercises,
     }
