@@ -2,34 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import api from "../api";
 import { useI18n } from "../i18n";
+import { useKeyboardInset } from "../useKeyboardInset";
 import { SpeakButton } from "./ExercisePlayer";
 
-function useKeyboardInset(active) {
-  const [inset, setInset] = useState(0);
-
-  useEffect(() => {
-    if (!active || !window.visualViewport) return undefined;
-
-    const vv = window.visualViewport;
-    const sync = () => {
-      setInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
-    };
-
-    sync();
-    vv.addEventListener("resize", sync);
-    vv.addEventListener("scroll", sync);
-    return () => {
-      vv.removeEventListener("resize", sync);
-      vv.removeEventListener("scroll", sync);
-    };
-  }, [active]);
-
-  return inset;
-}
-
-function ToolSheet({ open, onClose, title, icon, children }) {
+function ToolSheet({ open, onClose, title, icon, children, footer }) {
   const sheetRef = useRef(null);
-  const keyboardInset = useKeyboardInset(open);
+  const { keyboardInset } = useKeyboardInset(open);
 
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
@@ -83,13 +61,20 @@ function ToolSheet({ open, onClose, title, icon, children }) {
             ✕
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-5 sm:py-4">
+        <div
+          className={`min-h-0 flex-1 px-3 py-3 sm:px-5 sm:py-4 ${
+            footer ? "flex flex-col overflow-hidden" : "overflow-y-auto overscroll-y-contain"
+          }`}
+        >
           {children}
         </div>
+        {footer}
       </div>
     </div>
   );
 }
+
+export { ToolSheet };
 
 export function TranslatorPanel({ onClose }) {
   const { t } = useI18n();
@@ -220,16 +205,26 @@ export function ConjugatorPanel({ onClose }) {
       {error && <p className="mt-3 text-sm font-semibold text-red-600">{String(error)}</p>}
       {result && (
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
-          <div className="bg-indigo-50 px-4 py-2 text-center">
-            <p className="truncate text-sm font-extrabold text-indigo-800">{result.infinitive}</p>
-            <p className="text-[11px] font-semibold text-indigo-600">{t(TENSE_KEYS[result.tense] || "tensePresent")}</p>
+          <div className="bg-indigo-50 px-4 py-2.5">
+            <div className="flex items-center justify-center gap-2">
+              <p className="truncate text-sm font-extrabold text-indigo-800">{result.infinitive}</p>
+              <SpeakButton text={result.infinitive} small />
+            </div>
+            <p className="text-center text-[11px] font-semibold text-indigo-600">
+              {t(TENSE_KEYS[result.tense] || "tensePresent")}
+            </p>
           </div>
           <table className="w-full text-left text-sm">
             <tbody>
               {result.forms.map((row) => (
                 <tr key={row.pronoun} className="border-t border-slate-100">
-                  <td className="w-[38%] px-3 py-2.5 text-xs font-bold text-slate-500 sm:px-4 sm:text-sm">{row.pronoun}</td>
-                  <td className="px-3 py-2.5 font-extrabold text-slate-800 sm:px-4">{row.form}</td>
+                  <td className="w-[34%] px-3 py-2 text-xs font-bold text-slate-500 sm:px-4 sm:text-sm">{row.pronoun}</td>
+                  <td className="px-2 py-2 sm:px-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-extrabold text-slate-800">{row.form}</span>
+                      <SpeakButton text={row.form} small />
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -25,6 +25,15 @@ MEXICAN_INSTRUCTIONS = (
     "extra words — only pronounce exactly the text provided."
 )
 
+ANGELICA_TTS_INSTRUCTIONS = (
+    "You are Angélica, a university student from Mexico City (UNAM). "
+    "Speak in clear, natural Mexican Spanish (es-MX) with chilango accent and seseo. "
+    "Voice: a young Mexican woman in her early 20s — warm, friendly, natural. "
+    "NOT elderly, NOT cartoon, NOT US English accent. "
+    "Pace: clear and lively at this speed. "
+    "Read exactly the text provided — do not add, translate, or explain anything."
+)
+
 # --- Audio cache -------------------------------------------------------------
 # The same words are spoken many times (spaced repetition), so we cache the
 # generated MP3 by (model, voice, text). This means each unique phrase costs
@@ -43,8 +52,15 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def _cache_key(text: str) -> str:
-    raw = f"{settings.openai_tts_model}|{settings.openai_tts_voice}|{_normalize(text)}"
+def _cache_key(text: str, profile: str = "teacher") -> str:
+    if profile == "angelica":
+        raw = (
+            f"{settings.openai_tts_model}|{settings.openai_angelica_tts_voice}|"
+            f"{settings.openai_angelica_tts_speed}|{settings.openai_angelica_tts_pitch_semitones}|"
+            f"angelica-v13|{_normalize(text)}"
+        )
+    else:
+        raw = f"{settings.openai_tts_model}|{settings.openai_tts_voice}|{_normalize(text)}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -120,13 +136,20 @@ def tts_config():
 
 @router.post("/speak")
 async def speak(payload: TTSRequest, request: Request, current: User = Depends(get_current_user)):
+    return await _speak_profile(payload.text, request, profile="teacher")
+
+
+@router.post("/speak/angelica")
+async def speak_angelica(payload: TTSRequest, request: Request, current: User = Depends(get_current_user)):
+    return await _speak_profile(payload.text, request, profile="angelica")
+
+
+async def _speak_profile(text: str, request: Request, profile: str):
     if not settings.openai_api_key:
-        # Frontend should fall back to the browser's built-in es-MX voice.
         raise HTTPException(status_code=503, detail="Server TTS not configured")
 
-    key = _cache_key(payload.text)
+    key = _cache_key(text, profile)
 
-    # Browser already has this exact clip → tell it to reuse (no body, no tokens).
     if request.headers.get("if-none-match") == f'"{key}"':
         return Response(status_code=304, headers={"ETag": f'"{key}"', "X-TTS-Cache": "HIT-304"})
 
@@ -134,30 +157,37 @@ async def speak(payload: TTSRequest, request: Request, current: User = Depends(g
     if cached is not None:
         return _audio_response(cached, key, "HIT")
 
-    # Serialize concurrent requests for the same phrase so we generate it once.
     lock = _locks.setdefault(key, asyncio.Lock())
     async with lock:
-        cached = _load_cached(key)  # another request may have filled it while we waited
+        cached = _load_cached(key)
         if cached is not None:
             return _audio_response(cached, key, "HIT")
+
+        voice = settings.openai_angelica_tts_voice if profile == "angelica" else settings.openai_tts_voice
+        instructions = ANGELICA_TTS_INSTRUCTIONS if profile == "angelica" else MEXICAN_INSTRUCTIONS
 
         url = f"{settings.openai_base_url}/audio/speech"
         headers = {"Authorization": f"Bearer {settings.openai_api_key}"}
         body = {
             "model": settings.openai_tts_model,
-            "voice": settings.openai_tts_voice,
-            "input": payload.text,
-            "instructions": MEXICAN_INSTRUCTIONS,
+            "voice": voice,
+            "input": text,
+            "instructions": instructions,
             "response_format": "mp3",
         }
+        if profile == "angelica":
+            body["speed"] = settings.openai_angelica_tts_speed
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.post(url, headers=headers, json=body)
         except httpx.HTTPError as exc:
-            raise HTTPException(status_code=502, detail=f"TTS upstream error: {exc}")
+            raise HTTPException(status_code=502, detail=f"TTS upstream error: {exc}") from exc
 
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="TTS provider error")
 
-        _store_cached(key, resp.content)
-        return _audio_response(resp.content, key, "MISS")
+        audio = resp.content
+        # Pitch shift disabled for Angélica — ffmpeg resampling sounds cartoonish.
+
+        _store_cached(key, audio)
+        return _audio_response(audio, key, "MISS")

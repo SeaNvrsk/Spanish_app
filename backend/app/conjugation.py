@@ -1,4 +1,4 @@
-"""Spanish verb conjugation (Mexican usage — no vosotros)."""
+"""Spanish verb conjugation (Mexican usage — no vosotros). Rule-based, not AI."""
 
 import unicodedata
 
@@ -6,7 +6,7 @@ PRONOUNS = ("yo", "tú", "él/ella/usted", "nosotros", "ustedes", "ellos/ellas")
 
 TENSES = ("present", "preterite", "imperfect", "future")
 
-# Full paradigms: 6 forms matching PRONOUNS order.
+# --- Full irregular paradigms (all tenses) ---------------------------------
 IRREGULAR = {
     "ser": {
         "present": ["soy", "eres", "es", "somos", "son", "son"],
@@ -100,17 +100,69 @@ IRREGULAR = {
     },
 }
 
-# Present stem-changing (e→ie, o→ue, e→i): stem for yo..ellos after change applied to stem.
-STEM_CHANGE_PRESENT = {
-    "pensar": ("e", "ie", ["pienso", "piensas", "piensa", "pensamos", "piensan", "piensan"]),
-    "entender": ("e", "ie", ["entiendo", "entiendes", "entiende", "entendemos", "entienden", "entienden"]),
-    "preferir": ("e", "ie", ["prefiero", "prefieres", "prefiere", "preferimos", "prefieren", "prefieren"]),
-    "querer": None,  # in IRREGULAR
-    "poder": None,
-    "dormir": ("o", "ue", ["duermo", "duermes", "duerme", "dormimos", "duermen", "duermen"]),
-    "volver": ("o", "ue", ["vuelvo", "vuelves", "vuelve", "volvemos", "vuelven", "vuelven"]),
-    "pedir": ("e", "i", ["pido", "pides", "pide", "pedimos", "piden", "piden"]),
-    "servir": ("e", "i", ["sirvo", "sirves", "sirve", "servimos", "sirven", "sirven"]),
+# --- Present: full paradigm overrides --------------------------------------
+PRESENT_OVERRIDE = {
+    "pensar": ["pienso", "piensas", "piensa", "pensamos", "piensan", "piensan"],
+    "entender": ["entiendo", "entiendes", "entiende", "entendemos", "entienden", "entienden"],
+    "preferir": ["prefiero", "prefieres", "prefiere", "preferimos", "prefieren", "prefieren"],
+    "empezar": ["empiezo", "empiezas", "empieza", "empezamos", "empiezan", "empiezan"],
+    "comenzar": ["comienzo", "comienzas", "comienza", "comenzamos", "comienzan", "comienzan"],
+    "cerrar": ["cierro", "cierras", "cierra", "cerramos", "cierran", "cierran"],
+    "dormir": ["duermo", "duermes", "duerme", "dormimos", "duermen", "duermen"],
+    "volver": ["vuelvo", "vuelves", "vuelve", "volvemos", "vuelven", "vuelven"],
+    "pedir": ["pido", "pides", "pide", "pedimos", "piden", "piden"],
+    "servir": ["sirvo", "sirves", "sirve", "servimos", "sirven", "sirven"],
+    "seguir": ["sigo", "sigues", "sigue", "seguimos", "siguen", "siguen"],
+    "repetir": ["repito", "repites", "repite", "repetimos", "repiten", "repiten"],
+    "sentir": ["siento", "sientes", "siente", "sentimos", "sienten", "sienten"],
+    "caer": ["caigo", "caes", "cae", "caemos", "caen", "caen"],
+    "traer": ["traigo", "traes", "trae", "traemos", "traen", "traen"],
+    "oir": ["oigo", "oyes", "oye", "oímos", "oyen", "oyen"],
+    "oír": ["oigo", "oyes", "oye", "oímos", "oyen", "oyen"],
+    "valer": ["valgo", "vales", "vale", "valemos", "valen", "valen"],
+    "jugar": ["juego", "juegas", "juega", "jugamos", "juegan", "juegan"],
+    "conocer": ["conozco", "conoces", "conoce", "conocemos", "conocen", "conocen"],
+    "traducir": ["traduzco", "traduces", "traduce", "traducimos", "traducen", "traducen"],
+    "producir": ["produzco", "produces", "produce", "producimos", "producen", "producen"],
+}
+
+# --- Preterite: full paradigm overrides ------------------------------------
+PRETERITE_OVERRIDE = {
+    "leer": ["leí", "leíste", "leyó", "leímos", "leyeron", "leyeron"],
+    "creer": ["creí", "creíste", "creyó", "creímos", "creyeron", "creyeron"],
+    "oir": ["oí", "oíste", "oyó", "oímos", "oyeron", "oyeron"],
+    "oír": ["oí", "oíste", "oyó", "oímos", "oyeron", "oyeron"],
+    "caer": ["caí", "caíste", "cayó", "caímos", "cayeron", "cayeron"],
+    "traer": ["traje", "trajiste", "trajo", "trajimos", "trajeron", "trajeron"],
+    "conducir": ["conduje", "conduciste", "condujo", "conducimos", "condujeron", "condujeron"],
+    "traducir": ["traduje", "tradujiste", "tradujo", "tradujimos", "tradujeron", "tradujeron"],
+    "producir": ["produje", "produjiste", "produjo", "produjimos", "produjeron", "produjeron"],
+    "reducir": ["reduje", "redujiste", "redujo", "redujimos", "redujeron", "redujeron"],
+    "introducir": ["introduje", "introdujiste", "introdujo", "introdujimos", "introdujeron", "introdujeron"],
+    "andar": ["anduve", "anduviste", "anduvo", "anduvimos", "anduvieron", "anduvieron"],
+}
+
+# -IR preterite: e→i / o→u in 3rd person (él, ellos)
+PRETERITE_IR_E_TO_I = frozenset({
+    "pedir", "servir", "repetir", "seguir", "sentir", "mentir", "vestir",
+    "preferir", "medir", "rendir",
+})
+PRETERITE_IR_O_TO_U = frozenset({"dormir", "morir"})
+
+# Future: irregular stem (drop infinitive vowel, add endings)
+FUTURE_STEM = {
+    "salir": "saldr",
+    "tener": "tendr",
+    "venir": "vendr",
+    "decir": "dir",
+    "hacer": "har",
+    "poder": "podr",
+    "querer": "querr",
+    "saber": "sabr",
+    "poner": "pondr",
+    "caber": "cabr",
+    "valer": "valdr",
+    "haber": "habr",
 }
 
 
@@ -125,18 +177,53 @@ def _strip_reflexive(verb: str) -> tuple[str, bool]:
     return verb, False
 
 
+def _replace_last_vowel_in_stem(stem: str, from_v: str, to_v: str) -> str:
+    for i in range(len(stem) - 1, -1, -1):
+        if stem[i] == from_v:
+            return stem[:i] + to_v + stem[i + 1 :]
+    return stem
+
+
 def _regular_present(stem: str, ending: str) -> list[str]:
     if ending == "ar":
         return [stem + s for s in ("o", "as", "a", "amos", "an", "an")]
     if ending in ("er", "ir"):
-        return [stem + s for s in ("o", "es", "e", "emos" if ending == "er" else "imos", "en", "en")]
+        nos = "emos" if ending == "er" else "imos"
+        return [stem + s for s in ("o", "es", "e", nos, "en", "en")]
     raise ValueError("invalid ending")
 
 
-def _regular_preterite(stem: str, ending: str) -> list[str]:
-    if ending == "ar":
-        return [stem + s for s in ("é", "aste", "ó", "amos", "aron", "aron")]
-    return [stem + s for s in ("í", "iste", "ió", "imos", "ieron", "ieron")]
+def _preterite_ar_yo(stem: str) -> str:
+    """Spelling changes before -é in yo preterite (-car, -gar, -zar)."""
+    if stem.endswith("c"):
+        return stem[:-1] + "qué"
+    if stem.endswith("g"):
+        return stem[:-1] + "gué"
+    if stem.endswith("z"):
+        return stem[:-1] + "cé"
+    return stem + "é"
+
+
+def _preterite_ar(stem: str) -> list[str]:
+    yo = _preterite_ar_yo(stem)
+    return [yo, stem + "aste", stem + "ó", stem + "amos", stem + "aron", stem + "aron"]
+
+
+def _preterite_er_ir(stem: str, infinitive: str) -> list[str]:
+    """-ER/-IR preterite; vowel stems use y in 3rd person; stem change in -ir."""
+    if stem and stem[-1] in "aeiou":
+        return [stem + s for s in ("í", "íste", "yó", "ímos", "yeron", "yeron")]
+
+    forms = [stem + s for s in ("í", "iste", "ió", "imos", "ieron", "ieron")]
+    if infinitive in PRETERITE_IR_E_TO_I:
+        s3 = _replace_last_vowel_in_stem(stem, "e", "i")
+        forms[2] = s3 + "ió"
+        forms[4] = forms[5] = s3 + "ieron"
+    elif infinitive in PRETERITE_IR_O_TO_U:
+        s3 = _replace_last_vowel_in_stem(stem, "o", "u")
+        forms[2] = s3 + "ió"
+        forms[4] = forms[5] = s3 + "ieron"
+    return forms
 
 
 def _regular_imperfect(stem: str, ending: str) -> list[str]:
@@ -145,8 +232,12 @@ def _regular_imperfect(stem: str, ending: str) -> list[str]:
     return [stem + s for s in ("ía", "ías", "ía", "íamos", "ían", "ían")]
 
 
+def _future_from_stem(stem: str) -> list[str]:
+    return [stem + s for s in ("é", "ás", "á", "emos", "án", "án")]
+
+
 def _regular_future(infinitive: str) -> list[str]:
-    return [infinitive + s for s in ("é", "ás", "á", "emos", "án", "án")]
+    return _future_from_stem(infinitive)
 
 
 def conjugate(verb: str, tense: str = "present") -> dict:
@@ -172,14 +263,20 @@ def conjugate(verb: str, tense: str = "present") -> dict:
 
     if base in IRREGULAR and tense in IRREGULAR[base]:
         forms = list(IRREGULAR[base][tense])
-    elif tense == "present" and base in STEM_CHANGE_PRESENT and STEM_CHANGE_PRESENT[base]:
-        forms = list(STEM_CHANGE_PRESENT[base][2])
+    elif tense == "present" and base in PRESENT_OVERRIDE:
+        forms = list(PRESENT_OVERRIDE[base])
     elif tense == "present":
         forms = _regular_present(stem, ending)
+    elif tense == "preterite" and base in PRETERITE_OVERRIDE:
+        forms = list(PRETERITE_OVERRIDE[base])
+    elif tense == "preterite" and ending == "ar":
+        forms = _preterite_ar(stem)
     elif tense == "preterite":
-        forms = _regular_preterite(stem, ending)
+        forms = _preterite_er_ir(stem, base)
     elif tense == "imperfect":
         forms = _regular_imperfect(stem, ending)
+    elif base in FUTURE_STEM:
+        forms = _future_from_stem(FUTURE_STEM[base])
     else:
         forms = _regular_future(base)
 

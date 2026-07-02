@@ -18,6 +18,7 @@ from typing import Dict, List, Optional
 from .program import WEEKS, t
 from .a1_boost import A1_BOOST
 from .a1_boost_extra import A1_BOOST_EXTRA
+from .a1_theory_enrichment import enrich_a1_theory
 from ..vocab_images import attach_image, image_url_for
 
 AVATARS = ["🦊", "🐱", "🐶", "🐼", "🦉", "🐸", "🦁", "🐨", "🐵", "🦄", "🐷", "🐯"]
@@ -110,6 +111,69 @@ def _vocab_tokens(items: List[dict]) -> set:
     return tokens
 
 
+def _split_grammar_points(grammar: dict) -> dict:
+    """Turn a grammar paragraph into short bullet-friendly points per language."""
+    out = {}
+    for lang in ("en", "ru", "es"):
+        text = (grammar.get(lang) or "").strip()
+        if not text:
+            out[lang] = []
+            continue
+        parts = []
+        for chunk in re.split(r"(?<=[.!?])\s+", text):
+            chunk = chunk.strip()
+            if not chunk:
+                continue
+            if ";" in chunk:
+                parts.extend(p.strip() for p in chunk.split(";") if p.strip())
+            else:
+                parts.append(chunk)
+        out[lang] = parts or [text]
+    return out
+
+
+def _listen_examples(week_meta: dict, new_vocab: List[dict], taught_tokens: set, base_examples: List[dict], limit: int = 5) -> List[dict]:
+    """Build several listenable phrases for today's theory screen."""
+    allowed = set(taught_tokens) | _vocab_tokens(new_vocab)
+    new_only = _vocab_tokens(new_vocab)
+    seen: set[str] = set()
+    out: List[dict] = []
+
+    def add(ex: dict):
+        es = (ex.get("es") or "").strip()
+        if not es or es in seen:
+            return
+        seen.add(es)
+        out.append({"es": es, "en": ex.get("en", ""), "ru": ex.get("ru", "")})
+
+    for ex in base_examples:
+        if _word_tokens(ex["es"]) & new_only:
+            add(ex)
+
+    new_answers = {_norm(v["es"]) for v in new_vocab}
+    for ch in week_meta.get("chunks", []):
+        if _norm(ch.get("answer", "")) in new_answers:
+            filled = ch["template"].replace("___", ch["answer"])
+            add({"es": filled, "en": ch.get("en", ""), "ru": ch.get("ru", "")})
+
+    for ex in base_examples:
+        if _word_tokens(ex["es"]).issubset(allowed):
+            add(ex)
+
+    for ch in week_meta.get("chunks", []):
+        filled = ch["template"].replace("___", ch["answer"])
+        if _word_tokens(filled).issubset(allowed):
+            add({"es": filled, "en": ch.get("en", ""), "ru": ch.get("ru", "")})
+
+    if len(out) < limit:
+        for ex in base_examples:
+            add(ex)
+            if len(out) >= limit:
+                break
+
+    return out[:limit]
+
+
 def _est_minutes(exercises: List[dict], has_theory: bool = False) -> int:
     secs = sum(SECONDS_PER_EXERCISE.get(e.get("type"), 30) for e in exercises)
     if has_theory:
@@ -193,20 +257,35 @@ def _theory_for_day(week_meta, global_day, day_in_week, taught_tokens, new_vocab
     if not base:
         return None
     th = copy.deepcopy(base)
-    words = ", ".join(v["es"] for v in new_vocab[:6])
-    if len(new_vocab) > 6:
-        words += "…"
-    th["day_focus"] = t(
-        f"Day {day_in_week}/6 — learn {len(new_vocab)} new words today ({words}). "
-        f"Read the grammar carefully, listen to every example, then practice.",
-        f"День {day_in_week}/6 — сегодня {len(new_vocab)} новых слов ({words}). "
-        f"Внимательно прочитайте грамматику, прослушайте примеры и практикуйтесь.",
-        f"Día {day_in_week}/6 — hoy {len(new_vocab)} palabras nuevas ({words}). "
-        f"Lee la gramática, escucha los ejemplos y practica.",
+    th["new_words"] = [
+        {
+            "es": v["es"],
+            "en": v["translations"]["en"],
+            "ru": v["translations"]["ru"],
+            **({"image_url": v["image_url"]} if v.get("image_url") else {}),
+        }
+        for v in new_vocab
+    ]
+    th["grammar_points"] = _split_grammar_points(th.get("grammar", {}))
+    th["examples"] = _listen_examples(
+        week_meta, new_vocab, taught_tokens, th.get("examples", []), limit=6,
     )
-    allowed = set(taught_tokens) | _vocab_tokens(new_vocab)
-    filtered = [ex for ex in th.get("examples", []) if _word_tokens(ex["es"]).issubset(allowed)]
-    th["examples"] = (filtered or th.get("examples", []))[:5]
+
+    week_num = week_meta.get("week")
+    if week_meta.get("level") == "A1" and week_num:
+        enrich_a1_theory(th, week_num, day_in_week, new_vocab, taught_tokens, week_meta, _listen_examples)
+    else:
+        words = ", ".join(v["es"] for v in new_vocab[:6])
+        if len(new_vocab) > 6:
+            words += "…"
+        th["day_focus"] = t(
+            f"Day {day_in_week}/6 — learn {len(new_vocab)} new words today ({words}). "
+            f"Read the grammar carefully, listen to every example, then practice.",
+            f"День {day_in_week}/6 — сегодня {len(new_vocab)} новых слов ({words}). "
+            f"Внимательно прочитайте грамматику, прослушайте примеры и практикуйтесь.",
+            f"Día {day_in_week}/6 — hoy {len(new_vocab)} palabras nuevas ({words}). "
+            f"Lee la gramática, escucha los ejemplos y practica.",
+        )
     return th
 
 

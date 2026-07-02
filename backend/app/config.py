@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     openai_tts_voice: str = "coral"
     openai_base_url: str = "https://api.openai.com/v1"
     openai_chat_model: str = "gpt-4o-mini"
+    # Angélica chat: gpt-4o-mini is fine for A1–B1; set OPENAI_ANGELICA_MODEL=gpt-4o for richer roleplay.
+    openai_angelica_model: str = "gpt-4o-mini"
+    # Angélica: young UNAM student voice — coral + Mexican instructions.
+    openai_angelica_tts_voice: str = "nova"
+    openai_angelica_tts_speed: float = 0.96
+    openai_angelica_tts_pitch_semitones: float = 0.0
     openai_image_model: str = "gpt-image-1"
     openai_image_quality: str = "medium"
     openai_image_size: str = "1024x1024"  # API minimum; downscaled after download

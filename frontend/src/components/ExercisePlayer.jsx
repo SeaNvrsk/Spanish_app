@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../api";
 import { useI18n, nativeGloss } from "../i18n";
 import { useSpeak } from "../tts";
+import { useKeyboardInset } from "../useKeyboardInset";
 import { WordImage } from "./WordImage";
 
 export function normalize(s) {
@@ -14,15 +15,22 @@ export function normalize(s) {
     .trim();
 }
 
-export function SpeakButton({ text, big }) {
+export function SpeakButton({ text, big, small }) {
+  const { t } = useI18n();
   const { speak, speaking } = useSpeak();
+  const sizeClass = big
+    ? "h-20 w-20 text-4xl"
+    : small
+      ? "h-9 w-9 shrink-0 text-base shadow-md shadow-teal-500/30"
+      : "h-11 w-11 text-xl";
   return (
     <button
+      type="button"
       onClick={() => speak(text)}
-      className={`flex items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-500/40 transition active:scale-90 ${
-        big ? "h-20 w-20 text-4xl" : "h-11 w-11 text-xl"
-      } ${speaking ? "animate-pulse" : ""}`}
-      aria-label="play audio"
+      className={`flex items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-500/40 transition active:scale-90 ${sizeClass} ${
+        speaking ? "animate-pulse" : ""
+      }`}
+      aria-label={t("playAudio")}
     >
       🔊
     </button>
@@ -181,10 +189,15 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   const resultsRef = useRef([]);
   const autoSpoke = useRef(null);
   const finishedRef = useRef(false);
+  const scrollRef = useRef(null);
+  const footerRef = useRef(null);
+  const [footerHeight, setFooterHeight] = useState(112);
 
   const ex = exercises[idx];
   const total = exercises.length;
   const progressPct = Math.round((idx / total) * 100);
+  const hasTextInput = ex?.type === "translate" || ex?.type === "cloze";
+  const { keyboardInset, keyboardOpen } = useKeyboardInset(hasTextInput);
 
   useEffect(() => {
     if (ex && ex.type === "listen" && autoSpoke.current !== ex.id) {
@@ -200,6 +213,16 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
     setInfoError(false);
     setInfoLoading(false);
   }, [ex?.id]);
+
+  useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return undefined;
+    const measure = () => setFooterHeight(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ex?.id, status, infoOpen, infoLoading, infoData, hasTextInput, keyboardOpen]);
 
   const options = useMemo(() => ex?.options || [], [ex]);
   if (!ex) return null;
@@ -289,8 +312,23 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
 
   const clozeParts = ex.type === "cloze" ? ex.template.split("___") : null;
 
+  const textInput = hasTextInput && status === "idle" && (
+    <input
+      autoFocus
+      value={typed}
+      onChange={(e) => setTyped(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && typed.trim() && evaluate()}
+      placeholder={t("typeHere")}
+      enterKeyHint="done"
+      autoComplete="off"
+      autoCorrect="off"
+      spellCheck={false}
+      className="mobile-field mb-3 w-full rounded-2xl border-2 border-slate-200 px-5 py-3.5 text-xl font-bold text-slate-800 outline-none focus:border-teal-500"
+    />
+  );
+
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="relative flex h-full min-h-dvh flex-col overflow-hidden bg-white">
       <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
         <button
           onClick={finish}
@@ -307,13 +345,17 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-2 sm:px-5 sm:pt-4">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pt-2 sm:px-5 sm:pt-4"
+        style={{ paddingBottom: footerHeight + 16 }}
+      >
         {(kind === "exam" || kind === "capstone") && (
           <div className="mb-3 rounded-xl bg-amber-100 px-4 py-2 text-center text-sm font-extrabold text-amber-700">
             {kind === "capstone" ? "🎓 " + t("finalExam") : "📝 " + t("examBonus")}
           </div>
         )}
-        <p className="mb-4 text-base font-extrabold text-slate-800 sm:mb-6 sm:text-lg">{t(promptKey)}</p>
+        <p className={`text-base font-extrabold text-slate-800 sm:text-lg ${keyboardOpen ? "mb-2" : "mb-4 sm:mb-6"}`}>{t(promptKey)}</p>
 
         {ex.type === "flashcard" && (
           <div className="flex flex-col items-center gap-5 rounded-3xl bg-teal-50 py-8 animate-pop sm:py-10">
@@ -370,25 +412,14 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
         )}
 
         {ex.type === "translate" && (
-          <>
-            <div className="mb-4 flex items-center justify-center rounded-2xl bg-slate-50 py-6">
-              <span className="text-2xl font-black text-slate-800">{nativeGloss(ex.translations, lang)}</span>
-            </div>
-            <input
-              autoFocus
-              value={typed}
-              disabled={status !== "idle"}
-              onChange={(e) => setTyped(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && status === "idle" && typed.trim() && evaluate()}
-              placeholder={t("typeHere")}
-              className="w-full rounded-2xl border-2 border-slate-200 px-5 py-4 text-xl font-bold text-slate-800 outline-none focus:border-teal-500"
-            />
-          </>
+          <div className={`flex items-center justify-center rounded-2xl bg-slate-50 ${keyboardOpen ? "py-4" : "py-6"}`}>
+            <span className="text-2xl font-black text-slate-800">{nativeGloss(ex.translations, lang)}</span>
+          </div>
         )}
 
         {ex.type === "cloze" && (
           <>
-            <div className="mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 rounded-2xl bg-slate-50 px-4 py-6 text-2xl font-black text-slate-800">
+            <div className={`mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 rounded-2xl bg-slate-50 px-4 text-2xl font-black text-slate-800 ${keyboardOpen ? "py-4" : "py-6"}`}>
               <span>{clozeParts[0]}</span>
               <span className="inline-block min-w-[80px] rounded-lg border-b-4 border-teal-400 bg-white px-3 py-1 text-center text-teal-600">
                 {status !== "idle" ? ex.answer : typed || "?"}
@@ -399,15 +430,6 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
             <p className="mb-4 text-center text-sm font-semibold text-slate-500">
               {nativeGloss(ex.translations, lang)}
             </p>
-            <input
-              autoFocus
-              value={typed}
-              disabled={status !== "idle"}
-              onChange={(e) => setTyped(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && status === "idle" && typed.trim() && evaluate()}
-              placeholder={t("typeHere")}
-              className="w-full rounded-2xl border-2 border-slate-200 px-5 py-4 text-xl font-bold text-slate-800 outline-none focus:border-teal-500"
-            />
           </>
         )}
 
@@ -417,10 +439,19 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
       {/* Feedback + action bar (not for speak, which manages its own buttons) */}
       {ex.type !== "speak" && (
         <div
-          className={`sticky bottom-0 shrink-0 px-4 pb-safe pt-3 sm:px-5 sm:pt-4 ${
+          ref={footerRef}
+          className={`fixed inset-x-0 z-20 border-t border-slate-100 px-4 pt-3 sm:px-5 sm:pt-4 lg:left-1/2 lg:max-w-lg lg:-translate-x-1/2 ${
             status === "correct" ? "bg-green-50" : status === "wrong" ? "bg-red-50" : "bg-white"
           }`}
+          style={{
+            bottom: keyboardInset,
+            paddingBottom:
+              keyboardInset > 0
+                ? "0.5rem"
+                : "max(1.25rem, env(safe-area-inset-bottom, 0px))",
+          }}
         >
+          {textInput}
           {status !== "idle" && (
             <div className="mb-3">
               <p className={`font-extrabold ${status === "correct" ? "text-green-600" : "text-red-500"}`}>

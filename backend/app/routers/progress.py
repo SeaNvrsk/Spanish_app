@@ -14,6 +14,8 @@ from ..gamification import (
     peso_level as _peso_level,
     update_streak as _update_streak,
     bump_daily as _bump_daily,
+    lesson_pesos_for_score,
+    lesson_pesos_delta,
 )
 
 router = APIRouter(prefix="/api", tags=["progress"])
@@ -68,7 +70,7 @@ def complete_lesson(
             attempts=0,
         )
         db.add(prog)
-        earned = round(base_pesos * score / 100) if passed else 0
+        earned = lesson_pesos_for_score(base_pesos, score) if passed else 0
         new_completion = passed
     else:
         prog.attempts = prog.attempts or 0
@@ -76,8 +78,8 @@ def complete_lesson(
         prog.stars = prog.stars or 0
         prog.pesos_earned = prog.pesos_earned or 0
         prog.completed = bool(prog.completed)
-        if score > prog.best_score:
-            earned = round(base_pesos * (score - prog.best_score) / 100)
+        if passed and score > prog.best_score:
+            earned = lesson_pesos_delta(base_pesos, score, prog.pesos_earned)
         else:
             earned = 0
         if passed and not prog.completed:

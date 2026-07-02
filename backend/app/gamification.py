@@ -86,6 +86,18 @@ def peso_level(total_pesos: int) -> int:
     return (total_pesos or 0) // PESOS_PER_LEVEL + 1
 
 
+def lesson_pesos_for_score(base_pesos: int, score: int) -> int:
+    """Whole pesos earned for a lesson at a given score (0–base_pesos)."""
+    score = max(0, min(100, score))
+    return round((base_pesos or 0) * score / 100)
+
+
+def lesson_pesos_delta(base_pesos: int, new_score: int, already_earned: int) -> int:
+    """Pesos to award when improving best score (never negative, never above lesson cap)."""
+    target = lesson_pesos_for_score(base_pesos, new_score)
+    return max(0, target - (already_earned or 0))
+
+
 def update_streak(user: User, today: date):
     last = user.last_active_date
     if last == today:

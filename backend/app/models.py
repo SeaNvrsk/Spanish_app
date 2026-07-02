@@ -98,3 +98,17 @@ class DailyActivity(Base):
     lessons_completed = Column(Integer, default=0, nullable=False)
 
     user = relationship("User", back_populates="activity")
+
+
+class ChatMessage(Base):
+    """Angélica chat history per user."""
+
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    role = Column(String, nullable=False)  # user | assistant
+    content = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    user = relationship("User")

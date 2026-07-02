@@ -69,3 +69,19 @@ def test_no_untaught_words_in_early_exercises():
 
 def test_authored_weeks_present():
     assert len(WEEKS) >= 38
+
+
+def test_a1_theory_enrichment_per_day():
+    """Every A1 lesson day has structured theory: grammar sections, listen examples, day focus."""
+    lessons = get_all_lessons()
+    for w in range(1, 14):
+        for d in range(1, 7):
+            lid = f"w{w:02d}-d{d}"
+            lesson = lessons[lid]
+            th = lesson.get("theory")
+            assert th, f"missing theory for {lid}"
+            assert th.get("grammar_sections", {}).get("ru"), f"no grammar_sections ru for {lid}"
+            assert len(th["grammar_sections"]["ru"]) >= 4, f"thin grammar for {lid}"
+            assert len(th.get("new_words", [])) >= 4, f"no new_words for {lid}"
+            assert len(th.get("examples", [])) >= 5, f"few examples for {lid}"
+            assert th.get("day_focus", {}).get("ru"), f"no day_focus for {lid}"

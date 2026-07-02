@@ -29,8 +29,8 @@ function Shell({ children }) {
       <div className="flex h-dvh max-h-[100dvh] w-full flex-col overflow-hidden bg-slate-50 lg:mx-auto lg:max-w-lg lg:shadow-xl">
         {!hideChrome && <TopBar />}
         <main
-          className={`min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain ${
-            hideChrome ? "" : "pb-nav"
+          className={`min-h-0 flex-1 overflow-x-hidden ${
+            hideChrome ? "overflow-hidden" : "overflow-y-auto overscroll-y-contain pb-nav"
           }`}
         >
           {children}

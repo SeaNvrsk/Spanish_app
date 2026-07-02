@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import api from "./api";
 
-let serverTtsAvailable = null; // null = unknown, true/false = cached
+let serverTtsAvailable = null;
 
 const audioCache = new Map();
 const AUDIO_CACHE_MAX = 300;
 
-function cacheKey(text) {
-  return text.replace(/\s+/g, " ").trim();
+function cacheKey(text, profile) {
+  return `${profile}:${text.replace(/\s+/g, " ").trim()}`;
 }
 
-function cacheGet(text) {
-  const key = cacheKey(text);
+function cacheGet(text, profile) {
+  const key = cacheKey(text, profile);
   const url = audioCache.get(key);
   if (url) {
     audioCache.delete(key);
@@ -20,8 +20,8 @@ function cacheGet(text) {
   return url;
 }
 
-function cachePut(text, url) {
-  const key = cacheKey(text);
+function cachePut(text, profile, url) {
+  const key = cacheKey(text, profile);
   audioCache.set(key, url);
   while (audioCache.size > AUDIO_CACHE_MAX) {
     const oldestKey = audioCache.keys().next().value;
@@ -42,14 +42,15 @@ function pickMexicanVoice() {
   );
 }
 
-function speakBrowser(text) {
+function speakBrowser(text, childLike = false) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   const voice = pickMexicanVoice();
   if (voice) u.voice = voice;
   u.lang = voice?.lang || "es-MX";
-  u.rate = 0.92;
+  u.rate = childLike ? 0.96 : 0.92;
+  u.pitch = childLike ? 1.0 : 1;
   window.speechSynthesis.speak(u);
 }
 
@@ -58,13 +59,16 @@ async function probeServerTts() {
     const { data } = await api.get("/tts/config");
     serverTtsAvailable = !!data.server_tts;
   } catch {
-    // Don't cache false on transient errors — leave unknown for retry.
     if (serverTtsAvailable === null) serverTtsAvailable = false;
   }
   return serverTtsAvailable;
 }
 
-export function useSpeak() {
+export function useSpeak(profile = "default") {
+  const isAngelica = profile === "angelica";
+  const endpoint = isAngelica ? "/tts/speak/angelica" : "/tts/speak";
+  const cacheProfile = isAngelica ? "angelica-v13" : "default";
+
   const [speaking, setSpeaking] = useState(false);
   const audioRef = useRef(null);
 
@@ -83,39 +87,38 @@ export function useSpeak() {
     audio.onended = () => setSpeaking(false);
     audio.onerror = () => {
       setSpeaking(false);
-      speakBrowser(text);
+      speakBrowser(text, isAngelica);
     };
     return audio.play();
-  }, []);
+  }, [isAngelica]);
 
   const speak = useCallback(
     async (text) => {
       if (!text) return;
       setSpeaking(true);
       try {
-        // Re-check if we haven't confirmed server TTS yet (or after a prior failure).
         if (serverTtsAvailable !== true) {
           await probeServerTts();
         }
         if (serverTtsAvailable) {
-          const cached = cacheGet(text);
+          const cached = cacheGet(text, cacheProfile);
           if (cached) {
             await playUrl(cached, text);
             return;
           }
-          const { data } = await api.post("/tts/speak", { text }, { responseType: "blob" });
+          const { data } = await api.post(endpoint, { text }, { responseType: "blob" });
           const url = URL.createObjectURL(data);
-          cachePut(text, url);
+          cachePut(text, cacheProfile, url);
           await playUrl(url, text);
           return;
         }
       } catch {
         serverTtsAvailable = false;
       }
-      speakBrowser(text);
-      setTimeout(() => setSpeaking(false), Math.min(3000, 600 + text.length * 90));
+      speakBrowser(text, isAngelica);
+      setTimeout(() => setSpeaking(false), Math.min(4000, 600 + text.length * 90));
     },
-    [playUrl]
+    [cacheProfile, endpoint, isAngelica, playUrl]
   );
 
   return { speak, speaking };

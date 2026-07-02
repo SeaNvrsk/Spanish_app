@@ -171,10 +171,13 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
     gloss = "\n".join(gloss_parts) if gloss_parts else "Без перевода."
 
     system = (
-        "You teach Mexican Spanish (es-MX) to Russian-speaking learners. "
+        "You teach Mexican Spanish (es-MX) to Russian-speaking learners living in Mexico. "
+        "The example sentence MUST be natural Mexican Spanish as spoken in Mexico City — NOT Spain Spanish (es-ES). "
+        "Never use vosotros/vosotras; use ustedes. Prefer Mexican vocabulary (carro, celular, chamba, ahorita, "
+        "¿qué onda?, platicar, mande, etc.) over Peninsular forms (coche, móvil, trabajo as default, vale, coger bus). "
         "Return ONLY valid JSON: "
-        '{"explanation_ru": "2-4 clear sentences IN RUSSIAN: core meaning, register, when to use it in Mexico", '
-        '"example_es": "one short natural example sentence IN SPANISH ONLY (Mexican usage)"}'
+        '{"explanation_ru": "2-4 clear sentences IN RUSSIAN: core meaning, register, how Mexicans use it", '
+        '"example_es": "one short everyday sentence IN MEXICAN SPANISH ONLY — must sound native in Mexico, not Spain"}'
     )
     user = f"Word/phrase: {spanish}\n{gloss}"
 
@@ -255,7 +258,7 @@ def conjugate_verb(body: ConjugateRequest, _: User = Depends(get_current_user)):
 @router.post("/explain", response_model=ExplainResponse)
 async def explain_spanish(body: ExplainRequest, _: User = Depends(get_current_user)):
     spanish = body.spanish.strip()
-    key = _cache_key(f"ru-v2|{spanish}|{body.context_ru}|{body.context_en}")
+    key = _cache_key(f"ru-v3-mx|{spanish}|{body.context_ru}|{body.context_en}")
     cached = _load_explain(key)
     if cached:
         norm = _normalize_explain_cached(cached, spanish)
