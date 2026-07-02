@@ -1,4 +1,4 @@
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -10,10 +10,9 @@ from ..schemas import LessonResult, CompleteResponse
 from ..curriculum import get_lesson
 from ..schedule import lesson_schedule_meta
 from ..gamification import (
-    xp_level as _xp_level,
+    peso_level as _peso_level,
     update_streak as _update_streak,
     bump_daily as _bump_daily,
-    pesos_from_xp,
 )
 
 router = APIRouter(prefix="/api", tags=["progress"])
@@ -46,7 +45,7 @@ def complete_lesson(
         raise HTTPException(status_code=403, detail="Lesson not unlocked yet")
 
     score = max(0, min(100, payload.score))
-    base_xp = lesson["xp"]
+    base_pesos = lesson["pesos"]
     stars = _stars_for(score)
     passed = score >= PASS_THRESHOLD
 
@@ -64,22 +63,20 @@ def complete_lesson(
             completed=False,
             best_score=0,
             stars=0,
-            xp_earned=0,
+            pesos_earned=0,
             attempts=0,
         )
         db.add(prog)
-        earned = round(base_xp * score / 100) if passed else 0
+        earned = round(base_pesos * score / 100) if passed else 0
         new_completion = passed
     else:
-        # Defensive: legacy rows may have NULL numeric fields.
         prog.attempts = prog.attempts or 0
         prog.best_score = prog.best_score or 0
         prog.stars = prog.stars or 0
-        prog.xp_earned = prog.xp_earned or 0
+        prog.pesos_earned = prog.pesos_earned or 0
         prog.completed = bool(prog.completed)
-        # Reward only improvement on replays (keeps the leaderboard fair).
         if score > prog.best_score:
-            earned = round(base_xp * (score - prog.best_score) / 100)
+            earned = round(base_pesos * (score - prog.best_score) / 100)
         else:
             earned = 0
         if passed and not prog.completed:
@@ -90,12 +87,12 @@ def complete_lesson(
     prog.stars = max(prog.stars, stars)
     if passed:
         prog.completed = True
-    prog.xp_earned += earned
+    prog.pesos_earned += earned
     prog.last_completed_at = datetime.utcnow()
 
-    before_level = _xp_level(current.xp)
-    current.xp += earned
-    after_level = _xp_level(current.xp)
+    before_level = _peso_level(current.pesos)
+    current.pesos += earned
+    after_level = _peso_level(current.pesos)
 
     today = date.today()
     if earned > 0 or new_completion:
@@ -106,9 +103,8 @@ def complete_lesson(
     db.refresh(current)
 
     return CompleteResponse(
-        xp_earned=earned,
-        pesos_earned=pesos_from_xp(earned),
-        total_xp=current.xp,
+        pesos_earned=earned,
+        total_pesos=current.pesos,
         stars=prog.stars,
         best_score=prog.best_score,
         current_streak=current.current_streak,

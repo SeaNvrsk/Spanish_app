@@ -98,7 +98,17 @@ function SpeakExercise({ ex, onResult }) {
             <div className={`h-full rounded-full ${barColor}`} style={{ width: `${result.score}%` }} />
           </div>
           <p className="mt-3 text-sm text-slate-500">
-            {t("weHeard")}: <span className="font-semibold text-slate-700">“{result.transcript || "…"}”</span>
+            {result.passed && result.asr_corrected ? (
+              <>
+                {t("pronAccepted")}:{" "}
+                <span className="font-semibold text-slate-700">“{result.transcript || ex.es}”</span>
+              </>
+            ) : (
+              <>
+                {t("weHeard")}:{" "}
+                <span className="font-semibold text-slate-700">“{result.transcript || "…"}”</span>
+              </>
+            )}
           </p>
           <p className={`mt-1 text-sm font-extrabold ${result.passed ? "text-green-600" : "text-amber-600"}`}>
             {result.passed ? t("greatAccent") : t("closePron")}
@@ -162,7 +172,11 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   const [scoredTotal, setScoredTotal] = useState(0);
   const [selected, setSelected] = useState(null);
   const [typed, setTyped] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | correct | wrong
+  const [status, setStatus] = useState("idle");
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoLoading, setInfoLoading] = useState(false);
+  const [infoData, setInfoData] = useState(null);
+  const [infoError, setInfoError] = useState(false);
   const resultsRef = useRef([]);
   const autoSpoke = useRef(null);
   const finishedRef = useRef(false);
@@ -178,6 +192,13 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
       return () => clearTimeout(tmo);
     }
   }, [ex, speak]);
+
+  useEffect(() => {
+    setInfoOpen(false);
+    setInfoData(null);
+    setInfoError(false);
+    setInfoLoading(false);
+  }, [ex?.id]);
 
   const options = useMemo(() => ex?.options || [], [ex]);
   if (!ex) return null;
@@ -204,8 +225,36 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
     setStatus("idle");
     setSelected(null);
     setTyped("");
+    setInfoOpen(false);
+    setInfoData(null);
+    setInfoError(false);
     if (idx + 1 < total) setIdx(idx + 1);
     else finish();
+  };
+
+  const spanishTarget = ex.es || ex.answer || "";
+  const glossEn = ex.translations?.en || "";
+  const glossRu = ex.translations?.ru || "";
+
+  const loadInfo = async () => {
+    if (!spanishTarget) return;
+    setInfoOpen(true);
+    if (infoData && !infoError) return;
+    setInfoLoading(true);
+    setInfoError(false);
+    try {
+      const { data } = await api.post("/tools/explain", {
+        spanish: spanishTarget,
+        context_en: glossEn,
+        context_ru: glossRu,
+      });
+      setInfoData(data);
+    } catch {
+      setInfoError(true);
+      setInfoData(null);
+    } finally {
+      setInfoLoading(false);
+    }
   };
 
   const evaluate = () => {
@@ -240,21 +289,30 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   const clozeParts = ex.type === "cloze" ? ex.template.split("___") : null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <div className="flex items-center gap-3 px-4 py-3">
-        <button onClick={finish} className="text-2xl text-slate-400">✕</button>
-        <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-100">
+    <div className="flex min-h-dvh flex-col bg-white">
+      <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
+        <button
+          onClick={finish}
+          className="touch-target flex shrink-0 items-center justify-center rounded-full text-xl text-slate-400 active:bg-slate-100"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100 sm:h-3">
           <div className="h-full rounded-full bg-teal-500 transition-all" style={{ width: `${progressPct}%` }} />
         </div>
+        <span className="shrink-0 text-[11px] font-bold tabular-nums text-slate-400 sm:text-xs">
+          {idx + 1}/{total}
+        </span>
       </div>
 
-      <div className="flex flex-1 flex-col px-5 pt-4">
+      <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-2 sm:px-5 sm:pt-4">
         {(kind === "exam" || kind === "capstone") && (
           <div className="mb-3 rounded-xl bg-amber-100 px-4 py-2 text-center text-sm font-extrabold text-amber-700">
             {kind === "capstone" ? "🎓 " + t("finalExam") : "📝 " + t("examBonus")}
           </div>
         )}
-        <p className="mb-6 text-lg font-extrabold text-slate-800">{t(promptKey)}</p>
+        <p className="mb-4 text-base font-extrabold text-slate-800 sm:mb-6 sm:text-lg">{t(promptKey)}</p>
 
         {ex.type === "flashcard" && (
           <div className="flex flex-col items-center gap-5 rounded-3xl bg-teal-50 py-10 animate-pop">
@@ -296,7 +354,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
                   key={o.es}
                   disabled={status !== "idle"}
                   onClick={() => setSelected(o.es)}
-                  className={`flex items-center justify-between rounded-2xl border-2 px-5 py-4 text-left text-lg font-bold text-slate-700 transition active:scale-[0.98] ${cls}`}
+                  className={`flex min-h-[52px] items-center justify-between rounded-2xl border-2 px-4 py-3.5 text-left text-base font-bold text-slate-700 transition active:scale-[0.98] sm:px-5 sm:py-4 sm:text-lg ${cls}`}
                 >
                   <span>{optionLabel(o)}</span>
                 </button>
@@ -353,7 +411,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
       {/* Feedback + action bar (not for speak, which manages its own buttons) */}
       {ex.type !== "speak" && (
         <div
-          className={`sticky bottom-0 px-5 pb-6 pt-4 ${
+          className={`sticky bottom-0 shrink-0 px-4 pb-safe pt-3 sm:px-5 sm:pt-4 ${
             status === "correct" ? "bg-green-50" : status === "wrong" ? "bg-red-50" : "bg-white"
           }`}
         >
@@ -367,13 +425,50 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
                   {t("theAnswer")}: <span className="text-slate-900">{ex.answer}</span>
                 </p>
               )}
+              {status === "correct" && spanishTarget && (
+                <div className="mt-3">
+                  {!infoOpen ? (
+                    <button
+                      type="button"
+                      onClick={loadInfo}
+                      className="w-full rounded-xl border-2 border-teal-200 bg-teal-50 py-2.5 text-sm font-extrabold text-teal-700 active:scale-[0.99]"
+                    >
+                      ℹ️ {t("information")}
+                    </button>
+                  ) : (
+                    <div className="rounded-xl border border-teal-100 bg-white p-3 text-left shadow-sm">
+                      {infoLoading && <p className="text-sm font-semibold text-slate-500">{t("infoLoading")}</p>}
+                      {infoError && !infoLoading && (
+                        <p className="text-sm font-semibold text-red-500">{t("infoError")}</p>
+                      )}
+                      {infoData && !infoLoading && (
+                        <div className="space-y-2 text-sm text-slate-700">
+                          <p>
+                            <span className="font-extrabold text-slate-800">{t("infoMeaning")}: </span>
+                            {infoData.meaning}
+                          </p>
+                          <p>
+                            <span className="font-extrabold text-slate-800">{t("infoMexicoUsage")}: </span>
+                            {infoData.mexico_usage}
+                          </p>
+                          {infoData.example && (
+                            <p className="rounded-lg bg-teal-50 px-3 py-2 italic text-teal-800">
+                              “{infoData.example}”
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
           {ex.type === "flashcard" || status !== "idle" ? (
             <button
               onClick={advance}
-              className={`w-full rounded-2xl py-3.5 font-extrabold text-white shadow-lg active:scale-95 ${
+              className={`w-full rounded-2xl py-4 font-extrabold text-white shadow-lg active:scale-95 sm:py-3.5 ${
                 status === "wrong" ? "bg-red-500" : "bg-teal-600"
               }`}
             >
@@ -383,7 +478,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
             <button
               onClick={evaluate}
               disabled={ex.type === "translate" || ex.type === "cloze" ? !typed.trim() : selected == null}
-              className="w-full rounded-2xl bg-teal-600 py-3.5 font-extrabold text-white shadow-lg transition active:scale-95 disabled:bg-slate-200 disabled:text-slate-400"
+              className="w-full rounded-2xl bg-teal-600 py-4 font-extrabold text-white shadow-lg transition active:scale-95 disabled:bg-slate-200 disabled:text-slate-400 sm:py-3.5"
             >
               {t("check")}
             </button>

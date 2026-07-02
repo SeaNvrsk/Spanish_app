@@ -6,6 +6,7 @@ import Lesson from "./pages/Lesson";
 import Review from "./pages/Review";
 import Leaderboard from "./pages/Leaderboard";
 import Profile from "./pages/Profile";
+import Vocabulary from "./pages/Vocabulary";
 import BottomNav from "./components/BottomNav";
 import TopBar from "./components/TopBar";
 import RulesGate from "./components/RulesGate";
@@ -25,9 +26,15 @@ function Shell({ children }) {
   const hideChrome = location.pathname.startsWith("/lesson/") || location.pathname.startsWith("/review");
   return (
     <RulesGate>
-      <div className="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 shadow-xl sm:max-w-lg">
+      <div className="flex h-dvh max-h-[100dvh] w-full flex-col overflow-hidden bg-slate-50 lg:mx-auto lg:max-w-lg lg:shadow-xl">
         {!hideChrome && <TopBar />}
-        <main className={`flex-1 ${hideChrome ? "" : "pb-24"}`}>{children}</main>
+        <main
+          className={`min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain ${
+            hideChrome ? "" : "pb-nav"
+          }`}
+        >
+          {children}
+        </main>
         {!hideChrome && <BottomNav />}
       </div>
     </RulesGate>
@@ -84,6 +91,16 @@ export default function App() {
           <Protected>
             <Shell>
               <Profile />
+            </Shell>
+          </Protected>
+        }
+      />
+      <Route
+        path="/vocabulary"
+        element={
+          <Protected>
+            <Shell>
+              <Vocabulary />
             </Shell>
           </Protected>
         }

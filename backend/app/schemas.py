@@ -30,7 +30,7 @@ class UserPublic(BaseModel):
     name: str
     avatar: str
     ui_language: str
-    xp: int
+    pesos: int
     current_streak: int
     longest_streak: int
     last_active_date: Optional[date]
@@ -58,7 +58,7 @@ class LessonProgressPublic(BaseModel):
     completed: bool
     best_score: int
     stars: int
-    xp_earned: int
+    pesos_earned: int
     attempts: int
 
     class Config:
@@ -66,9 +66,8 @@ class LessonProgressPublic(BaseModel):
 
 
 class CompleteResponse(BaseModel):
-    xp_earned: int
     pesos_earned: int
-    total_xp: int
+    total_pesos: int
     stars: int
     best_score: int
     current_streak: int
@@ -82,7 +81,7 @@ class LeaderboardEntry(BaseModel):
     id: int
     name: str
     avatar: str
-    xp: int
+    pesos: int
     current_streak: int
     is_me: bool = False
 
@@ -90,7 +89,7 @@ class LeaderboardEntry(BaseModel):
 # ---------- Stats ----------
 class DailyActivityPublic(BaseModel):
     day: date
-    xp: int
+    pesos: int
     lessons_completed: int
 
     class Config:
@@ -98,7 +97,6 @@ class DailyActivityPublic(BaseModel):
 
 
 class StatsResponse(BaseModel):
-    total_xp: int
     total_pesos: int
     lessons_completed: int
     current_streak: int
@@ -116,8 +114,7 @@ class FamilyMemberStats(BaseModel):
     name: str
     avatar: str
     is_admin: bool
-    xp: int
-    total_pesos: int
+    pesos: int
     month_pesos: int
     current_streak: int
     longest_streak: int
@@ -131,3 +128,31 @@ class FamilyOverviewResponse(BaseModel):
     competitors: int
     month: str
     members: List[FamilyMemberStats]
+
+
+# ---------- Achievements ----------
+class AchievementPublic(BaseModel):
+    id: str
+    icon: str
+    category: str
+    unlocked: bool
+
+
+class AchievementsResponse(BaseModel):
+    unlocked_count: int
+    total_count: int
+    achievements: List[AchievementPublic]
+
+
+# ---------- Vocabulary ----------
+class VocabularyEntry(BaseModel):
+    word_es: str
+    word_en: str
+    word_ru: str
+    reps: int
+    lapses: int
+
+
+class VocabularyResponse(BaseModel):
+    count: int
+    words: List[VocabularyEntry]

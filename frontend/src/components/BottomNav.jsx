@@ -4,9 +4,7 @@ import { useI18n } from "../i18n";
 import { TranslatorPanel, ConjugatorPanel } from "./ToolsFooter";
 
 const navClass = (active) =>
-  `flex min-w-0 flex-1 flex-col items-center gap-0.5 px-0.5 py-2 text-[10px] font-bold leading-tight transition-colors sm:text-xs ${
-    active ? "text-teal-600" : "text-slate-400"
-  }`;
+  `bottom-nav-item transition-colors active:bg-slate-50 ${active ? "text-teal-600" : "text-slate-400"}`;
 
 export default function BottomNav() {
   const { t } = useI18n();
@@ -14,31 +12,34 @@ export default function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-1/2 z-20 w-full max-w-md -translate-x-1/2 border-t border-slate-100 bg-white pb-[env(safe-area-inset-bottom)] sm:max-w-lg">
-        <div className="flex items-stretch">
-          <NavLink to="/" end className={({ isActive }) => navClass(isActive)}>
-            <span className="text-[1.35rem] leading-none sm:text-2xl">📚</span>
-            <span className="max-w-full truncate">{t("learn")}</span>
+      <nav
+        aria-label="Main navigation"
+        className="fixed inset-x-0 bottom-0 z-20 w-full border-t border-slate-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:left-1/2 lg:max-w-lg lg:-translate-x-1/2"
+      >
+        <div className="grid grid-cols-5 items-stretch">
+          <NavLink to="/" end className={({ isActive }) => navClass(isActive)} aria-label={t("learn")}>
+            <span className="bottom-nav-icon" aria-hidden>📚</span>
+            <span>{t("learn")}</span>
           </NavLink>
 
-          <button type="button" onClick={() => setPanel("translate")} className={navClass(false)}>
-            <span className="text-[1.35rem] leading-none sm:text-2xl">🌐</span>
-            <span className="max-w-full truncate">{t("translatorShort")}</span>
+          <button type="button" onClick={() => setPanel("translate")} className={navClass(false)} aria-label={t("translator")}>
+            <span className="bottom-nav-icon" aria-hidden>🌐</span>
+            <span>{t("translatorShort")}</span>
           </button>
 
-          <NavLink to="/ranking" className={({ isActive }) => navClass(isActive)}>
-            <span className="text-[1.35rem] leading-none sm:text-2xl">🏆</span>
-            <span className="max-w-full truncate">{t("ranking")}</span>
+          <NavLink to="/ranking" className={({ isActive }) => navClass(isActive)} aria-label={t("ranking")}>
+            <span className="bottom-nav-icon" aria-hidden>🏆</span>
+            <span>{t("ranking")}</span>
           </NavLink>
 
-          <button type="button" onClick={() => setPanel("conjugate")} className={navClass(false)}>
-            <span className="text-[1.35rem] leading-none sm:text-2xl">📝</span>
-            <span className="max-w-full truncate">{t("conjugatorShort")}</span>
+          <button type="button" onClick={() => setPanel("conjugate")} className={navClass(false)} aria-label={t("conjugator")}>
+            <span className="bottom-nav-icon" aria-hidden>📝</span>
+            <span>{t("conjugatorShort")}</span>
           </button>
 
-          <NavLink to="/profile" className={({ isActive }) => navClass(isActive)}>
-            <span className="text-[1.35rem] leading-none sm:text-2xl">👤</span>
-            <span className="max-w-full truncate">{t("profile")}</span>
+          <NavLink to="/profile" className={({ isActive }) => navClass(isActive)} aria-label={t("profile")}>
+            <span className="bottom-nav-icon" aria-hidden>👤</span>
+            <span>{t("profile")}</span>
           </NavLink>
         </div>
       </nav>

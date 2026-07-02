@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../auth";
 import { useI18n } from "../i18n";
 
-const RULES_VERSION = "v1";
+const RULES_VERSION = "v2";
 
 function rulesKey(userId) {
   return `family_rules_${RULES_VERSION}_${userId}`;
@@ -42,20 +42,16 @@ export default function RulesGate({ children, forceShow = false, onClose }) {
     <>
       <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-teal-700 to-emerald-800">
         <div className="flex-1 overflow-y-auto px-5 pb-6 pt-8">
-          <div className="mx-auto max-w-md">
+          <div className="mx-auto w-full lg:max-w-md">
             <p className="text-center text-4xl">📜</p>
             <h1 className="mt-3 text-center text-2xl font-extrabold text-white">{t("rulesTitle")}</h1>
             <p className="mt-2 text-center text-sm text-teal-100">{t("rulesIntro")}</p>
 
             <div className="mt-6 space-y-3">
-              <RuleBlock icon="⚡" title={t("rulesXpTitle")}>
-                <p>{t("rulesXpLesson")}</p>
-                <p>{t("rulesXpExam")}</p>
-                <p>{t("rulesXpReview")}</p>
-              </RuleBlock>
-
-              <RuleBlock icon="💰" title={t("rulesPesosTitle")}>
-                <p>{t("rulesPesosRate")}</p>
+              <RuleBlock icon="$" title={t("rulesPesosTitle")}>
+                <p>{t("rulesPesosLesson")}</p>
+                <p>{t("rulesPesosExam")}</p>
+                <p>{t("rulesPesosReview")}</p>
                 <p>{t("rulesPesosMonth")}</p>
               </RuleBlock>
 
@@ -81,10 +77,10 @@ export default function RulesGate({ children, forceShow = false, onClose }) {
           </div>
         </div>
 
-        <div className="border-t border-white/20 bg-emerald-900/40 px-5 pb-8 pt-4">
+        <div className="border-t border-white/20 bg-emerald-900/40 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:px-5">
           <button
             onClick={accept}
-            className="mx-auto block w-full max-w-md rounded-2xl bg-white py-4 text-base font-extrabold text-teal-700 shadow-lg active:scale-[0.98]"
+            className="mx-auto block w-full rounded-2xl bg-white py-4 text-base font-extrabold text-teal-700 shadow-lg active:scale-[0.98] lg:max-w-md"
           >
             {t("rulesAccept")} →
           </button>

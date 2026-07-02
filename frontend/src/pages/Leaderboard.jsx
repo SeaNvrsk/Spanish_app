@@ -117,9 +117,9 @@ export default function Leaderboard() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-black text-amber-600">{m.month_pesos} 💰</p>
+                    <p className="text-sm font-black text-amber-600">${m.month_pesos}</p>
                     <p className="text-[10px] text-slate-400">{t("monthPesos")}</p>
-                    <p className="text-xs font-bold text-teal-600">{m.xp} XP</p>
+                    <p className="text-xs font-bold text-amber-700">${m.pesos}</p>
                   </div>
                 </div>
               </div>
@@ -128,31 +128,31 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* All-time XP ranking — competitors only */}
+      {/* All-time peso ranking — competitors only */}
       <h2 className="mb-2 px-1 text-sm font-extrabold uppercase tracking-wide text-slate-500">
-        {t("allTimePoints")}
+        {t("allTimePesos")}
       </h2>
       <div className="space-y-2">
         {rows.map((r) => (
           <div
             key={r.id}
-            className={`flex items-center gap-3 rounded-2xl border px-4 py-3 shadow-sm ${
+            className={`flex items-center gap-2 rounded-2xl border px-3 py-3 shadow-sm sm:gap-3 sm:px-4 ${
               r.is_me ? "border-teal-300 bg-teal-50" : "border-slate-100 bg-white"
             }`}
           >
-            <div className="w-8 text-center text-lg font-black text-slate-400">
+            <div className="w-6 shrink-0 text-center text-base font-black text-slate-400 sm:w-8 sm:text-lg">
               {medal(r.rank) || r.rank}
             </div>
-            <span className="text-3xl">{r.avatar}</span>
-            <div className="flex-1">
-              <p className="font-extrabold text-slate-800">
+            <span className="shrink-0 text-2xl sm:text-3xl">{r.avatar}</span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-extrabold text-slate-800">
                 {r.name} {r.is_me && <span className="text-xs font-bold text-teal-600">({t("you")})</span>}
               </p>
               <p className="text-xs font-semibold text-orange-500">🔥 {r.current_streak}</p>
             </div>
             <div className="text-right">
-              <p className="text-lg font-black text-teal-600">{r.xp}</p>
-              <p className="text-[10px] font-bold uppercase text-slate-400">{t("totalXp")}</p>
+              <p className="text-lg font-black text-amber-600">${r.pesos}</p>
+              <p className="text-[10px] font-bold uppercase text-slate-400">{t("pesos")}</p>
             </div>
           </div>
         ))}

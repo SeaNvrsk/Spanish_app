@@ -5,7 +5,7 @@ import { useI18n, localized } from "../i18n";
 
 function DayNode({ day, state, onClick }) {
   const base =
-    "relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-extrabold shadow-sm transition active:scale-90";
+    "relative flex aspect-square w-full items-center justify-center rounded-xl text-sm font-extrabold shadow-sm transition active:scale-90 sm:h-12 sm:w-12 sm:rounded-2xl";
   let cls = "bg-slate-200 text-slate-400";
   let label = day.day_in_week;
   if (day.kind === "exam") label = "📝";
@@ -106,8 +106,8 @@ export default function Dashboard() {
     <div className="px-4 py-4">
       <div className="mb-5 rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-600 p-4 text-white shadow-lg">
         <p className="text-xs font-bold uppercase tracking-wide text-teal-100">{t("yourGoal")}</p>
-        <p className="mt-0.5 text-lg font-extrabold">🎯 {t("goalText")}</p>
-        <p className="mt-1 text-xs text-teal-100">365 {t("day")} · 52 {t("week")}</p>
+        <p className="mt-0.5 text-xl font-extrabold sm:text-lg">🎯 {t("goalText")}</p>
+        <p className="mt-1 text-sm text-teal-100 sm:text-xs">365 {t("day")} · 52 {t("week")}</p>
         {data.program_day > 0 && (
           <p className="mt-2 rounded-xl bg-white/15 px-3 py-2 text-xs font-semibold text-teal-50">
             📅 {t("calendarDay")} {data.program_day}
@@ -118,7 +118,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      <p className="mb-4 text-center text-[11px] font-semibold text-slate-400">{t("catchUpHint")}</p>
+      <p className="mb-4 text-center text-xs font-semibold text-slate-400 sm:text-sm">{t("catchUpHint")}</p>
 
       {review && review.total_cards > 0 && (
         <button
@@ -187,7 +187,7 @@ export default function Dashboard() {
                       {doneInWeek}/{w.days.length}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-7 gap-1 sm:gap-2">
                     {w.days.map((d) => (
                       <DayNode
                         key={d.id}

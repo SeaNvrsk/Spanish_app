@@ -7,16 +7,20 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, LessonProgress, DailyActivity
-from ..schemas import LeaderboardEntry, StatsResponse, DailyActivityPublic, FamilyOverviewResponse, FamilyMemberStats
-from ..curriculum import get_curriculum
-from ..gamification import pesos_from_xp
+from ..schemas import (
+    LeaderboardEntry,
+    StatsResponse,
+    DailyActivityPublic,
+    FamilyOverviewResponse,
+    FamilyMemberStats,
+)
+from ..curriculum import get_curriculum, get_all_lessons
 from ..family import competitors, FAMILY_COMPETITORS
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
 
 def _cefr_progress(db: Session, user: User):
-    """Determine the user's current CEFR level and completion of that level."""
     completed_ids = {
         p.lesson_id
         for p in db.query(LessonProgress).filter(
@@ -41,17 +45,17 @@ def _cefr_progress(db: Session, user: User):
 def _month_pesos(db: Session, user_id: int) -> int:
     start = date.today().replace(day=1)
     total = (
-        db.query(func.sum(DailyActivity.xp))
+        db.query(func.sum(DailyActivity.pesos))
         .filter(DailyActivity.user_id == user_id, DailyActivity.day >= start)
         .scalar()
     )
-    return pesos_from_xp(int(total or 0))
+    return int(total or 0)
 
 
 @router.get("/leaderboard", response_model=list[LeaderboardEntry])
 def leaderboard(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Family XP ranking — admins are excluded from competition."""
-    users = sorted(competitors(db), key=lambda u: (-u.xp, u.id))
+    """Family peso ranking — admins are excluded from competition."""
+    users = sorted(competitors(db), key=lambda u: (-u.pesos, u.id))
     entries = []
     for i, u in enumerate(users, start=1):
         entries.append(LeaderboardEntry(
@@ -59,7 +63,7 @@ def leaderboard(current: User = Depends(get_current_user), db: Session = Depends
             id=u.id,
             name=u.name,
             avatar=u.avatar,
-            xp=u.xp,
+            pesos=u.pesos,
             current_streak=u.current_streak,
             is_me=(u.id == current.id),
         ))
@@ -70,7 +74,7 @@ def leaderboard(current: User = Depends(get_current_user), db: Session = Depends
 def stats(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
     cefr, percent, lessons_completed = _cefr_progress(db, current)
 
-    comp = sorted(competitors(db), key=lambda u: (-u.xp, u.id))
+    comp = sorted(competitors(db), key=lambda u: (-u.pesos, u.id))
     total_competitors = len(comp)
     if current.is_admin:
         rank = 0
@@ -89,8 +93,7 @@ def stats(current: User = Depends(get_current_user), db: Session = Depends(get_d
     activity = [DailyActivityPublic.model_validate(r) for r in rows]
 
     return StatsResponse(
-        total_xp=current.xp,
-        total_pesos=pesos_from_xp(current.xp),
+        total_pesos=current.pesos,
         lessons_completed=lessons_completed,
         current_streak=current.current_streak,
         longest_streak=current.longest_streak,
@@ -105,7 +108,6 @@ def stats(current: User = Depends(get_current_user), db: Session = Depends(get_d
 
 @router.get("/admin/family-overview", response_model=FamilyOverviewResponse)
 def family_overview(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Full family dashboard — admin only."""
     if not current.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
 
@@ -121,8 +123,7 @@ def family_overview(current: User = Depends(get_current_user), db: Session = Dep
             name=u.name,
             avatar=u.avatar,
             is_admin=bool(u.is_admin),
-            xp=u.xp,
-            total_pesos=pesos_from_xp(u.xp),
+            pesos=u.pesos,
             month_pesos=_month_pesos(db, u.id),
             current_streak=u.current_streak,
             longest_streak=u.longest_streak,

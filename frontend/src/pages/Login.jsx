@@ -5,6 +5,9 @@ import { useI18n, LANGUAGES } from "../i18n";
 
 const AVATARS = ["🦊", "🐱", "🐶", "🐼", "🦉", "🐸", "🦁", "🐨", "🐵", "🦄", "🐷", "🐯"];
 
+const fieldClass =
+  "mobile-field w-full rounded-2xl border-2 border-slate-200 bg-white px-4 text-slate-800 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-200";
+
 export default function Login() {
   const { user, login, register } = useAuth();
   const { t, lang, setLang } = useI18n();
@@ -39,104 +42,116 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-600 to-emerald-700 px-5 py-8">
-      <div className="mx-auto flex max-w-md flex-col">
-        <div className="mb-4 flex justify-end gap-1">
-          {LANGUAGES.map((l) => (
-            <button
-              key={l.code}
-              onClick={() => setLang(l.code)}
-              className={`rounded-full px-2.5 py-1 text-lg ${
-                lang === l.code ? "bg-white/25" : "opacity-60"
-              }`}
-              title={l.label}
-            >
-              {l.flag}
-            </button>
-          ))}
-        </div>
+    <div className="login-screen">
+      <div className="login-header">
+        <div className="login-emoji">🌮</div>
+        <h1 className="mt-3 text-2xl font-extrabold leading-tight">{t("appName")}</h1>
+        <p className="mt-1.5 text-base text-teal-50">{t("tagline")}</p>
 
-        <div className="mb-6 text-center text-white">
-          <div className="text-6xl">🌮</div>
-          <h1 className="mt-2 text-2xl font-extrabold">{t("appName")}</h1>
-          <p className="mt-1 text-sm text-teal-50">{t("tagline")}</p>
-        </div>
-
-        <div className="rounded-3xl bg-white p-6 shadow-2xl animate-slideup">
-          <h2 className="mb-4 text-center text-lg font-extrabold text-slate-800">
-            {mode === "login" ? t("welcomeBack") : t("joinFamily")}
-          </h2>
-
-          <form onSubmit={submit} className="space-y-3">
-            {mode === "register" && (
-              <>
-                <input
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-teal-500"
-                  placeholder={t("name")}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-                <div>
-                  <p className="mb-2 text-xs font-bold text-slate-500">{t("chooseAvatar")}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {AVATARS.map((a) => (
-                      <button
-                        type="button"
-                        key={a}
-                        onClick={() => setAvatar(a)}
-                        className={`rounded-xl p-1.5 text-2xl transition ${
-                          avatar === a ? "bg-teal-100 ring-2 ring-teal-500" : "bg-slate-50"
-                        }`}
-                      >
-                        {a}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-            <input
-              type="email"
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-teal-500"
-              placeholder={t("email")}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-800 outline-none focus:border-teal-500"
-              placeholder={t("password")}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-
-            {error && <p className="text-sm font-semibold text-red-500">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={busy}
-              className="w-full rounded-xl bg-teal-600 py-3 font-extrabold text-white shadow-lg shadow-teal-600/30 transition active:scale-95 disabled:opacity-60"
-            >
-              {busy ? "..." : mode === "login" ? t("login") : t("createAccount")}
-            </button>
-          </form>
-
-          <div className="mt-4 text-center text-sm text-slate-500">
-            {mode === "login" ? t("noAccount") : t("haveAccount")}{" "}
-            <button
-              onClick={() => {
-                setMode(mode === "login" ? "register" : "login");
-                setError("");
-              }}
-              className="font-extrabold text-teal-600"
-            >
-              {mode === "login" ? t("register") : t("login")}
-            </button>
+        <div className="mt-5 px-1">
+          <p className="mb-2.5 text-xs font-bold uppercase tracking-wider text-teal-100">
+            {t("interfaceLanguage")}
+          </p>
+          <div className="lang-row">
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => setLang(l.code)}
+                aria-label={l.label}
+                aria-pressed={lang === l.code}
+                className={`lang-btn ${
+                  lang === l.code ? "bg-white/30 ring-2 ring-white/80" : "bg-white/10"
+                }`}
+              >
+                <span aria-hidden>{l.flag}</span>
+                <span className="lang-btn-label text-white">{l.label}</span>
+              </button>
+            ))}
           </div>
+        </div>
+      </div>
+
+      <div className="login-form-sheet animate-slideup">
+        <h2 className="mb-5 text-center text-2xl font-extrabold text-slate-800">
+          {mode === "login" ? t("welcomeBack") : t("joinFamily")}
+        </h2>
+
+        <form onSubmit={submit} className="flex flex-1 flex-col gap-5">
+          {mode === "register" && (
+            <>
+              <input
+                className={fieldClass}
+                placeholder={t("name")}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                required
+              />
+              <div>
+                <p className="mb-3 text-sm font-bold text-slate-500">{t("chooseAvatar")}</p>
+                <div className="grid grid-cols-4 gap-2.5 sm:grid-cols-6 sm:gap-3">
+                  {AVATARS.map((a) => (
+                    <button
+                      type="button"
+                      key={a}
+                      onClick={() => setAvatar(a)}
+                      className={`flex aspect-square items-center justify-center rounded-2xl text-3xl transition active:scale-95 ${
+                        avatar === a ? "bg-teal-100 ring-2 ring-teal-500" : "bg-slate-50"
+                      }`}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          <input
+            type="email"
+            className={fieldClass}
+            placeholder={t("email")}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            inputMode="email"
+            required
+          />
+          <input
+            type="password"
+            className={fieldClass}
+            placeholder={t("password")}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            required
+            minLength={6}
+          />
+
+          {error && <p className="text-base font-semibold text-red-500">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="mobile-btn mt-auto w-full rounded-2xl bg-teal-600 font-extrabold text-white shadow-lg shadow-teal-600/30 transition active:scale-[0.98] disabled:opacity-60"
+          >
+            {busy ? "..." : mode === "login" ? t("login") : t("createAccount")}
+          </button>
+        </form>
+
+        <div className="mt-5 text-center text-base text-slate-500">
+          {mode === "login" ? t("noAccount") : t("haveAccount")}{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === "login" ? "register" : "login");
+              setError("");
+            }}
+            className="inline-flex min-h-[48px] items-center font-extrabold text-teal-600 underline-offset-2 active:underline"
+          >
+            {mode === "login" ? t("register") : t("login")}
+          </button>
         </div>
       </div>
     </div>

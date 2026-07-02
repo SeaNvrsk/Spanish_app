@@ -9,7 +9,7 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, DailyActivity
 from ..family import competitors, FAMILY_COMPETITORS, is_competitor
-from ..gamification import pesos_from_xp, PESOS_PER_POINT, PLACE_SPEND_SHARE
+from ..gamification import PLACE_SPEND_SHARE
 
 router = APIRouter(prefix="/api/rewards", tags=["rewards"])
 
@@ -23,12 +23,12 @@ def _month_bounds(today: date):
 
 def _month_pesos_by_user(db: Session, start: date):
     rows = (
-        db.query(DailyActivity.user_id, func.sum(DailyActivity.xp))
+        db.query(DailyActivity.user_id, func.sum(DailyActivity.pesos))
         .filter(DailyActivity.day >= start)
         .group_by(DailyActivity.user_id)
         .all()
     )
-    return {uid: pesos_from_xp(int(x or 0)) for uid, x in rows}
+    return {uid: int(x or 0) for uid, x in rows}
 
 
 def _spendable(month_pesos: int, rank: int, carryover: int) -> int:
@@ -88,7 +88,6 @@ def summary(current: User = Depends(get_current_user), db: Session = Depends(get
     return {
         "month": today.strftime("%Y-%m"),
         "days_left": days_left,
-        "pesos_per_point": PESOS_PER_POINT,
         "competitors": FAMILY_COMPETITORS,
         "me": my,
         "entries": entries,
@@ -97,7 +96,6 @@ def summary(current: User = Depends(get_current_user), db: Session = Depends(get
 
 @router.post("/carryover")
 def carryover(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Roll this month's spendable balance over into next month (winner's choice)."""
     if current.is_admin:
         raise HTTPException(status_code=403, detail="Admin is excluded from the monthly prize pool")
 

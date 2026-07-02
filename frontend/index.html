@@ -2,13 +2,42 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f766e" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="HandheldFriendly" content="true" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>Español para la Familia 🌮</title>
+    <script>
+      (function () {
+        var mobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || "");
+        if (!mobile) return;
+        var short = Math.min(window.screen.width, window.screen.height);
+        var dpr = window.devicePixelRatio || 1;
+        var targetW = short > 600 ? Math.round(short / dpr) : short;
+        var vp = document.querySelector('meta[name="viewport"]');
+        if (!vp) {
+          vp = document.createElement("meta");
+          vp.name = "viewport";
+          document.head.prepend(vp);
+        }
+        vp.setAttribute("content", "width=" + targetW + ", initial-scale=1, viewport-fit=cover");
+        document.documentElement.classList.add("is-mobile");
+        if (window.matchMedia("(orientation: portrait)").matches) {
+          document.documentElement.classList.add("is-portrait");
+        }
+        requestAnimationFrame(function () {
+          var layoutW = document.documentElement.clientWidth;
+          if (layoutW > targetW + 60) {
+            document.documentElement.style.zoom = String(Math.min(layoutW / targetW, 3));
+          }
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

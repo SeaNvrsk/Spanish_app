@@ -1,10 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import api from "../api";
 import { useI18n } from "../i18n";
 import { SpeakButton } from "./ExercisePlayer";
 
+function useKeyboardInset(active) {
+  const [inset, setInset] = useState(0);
+
+  useEffect(() => {
+    if (!active || !window.visualViewport) return undefined;
+
+    const vv = window.visualViewport;
+    const sync = () => {
+      setInset(Math.max(0, window.innerHeight - vv.height - vv.offsetTop));
+    };
+
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+    };
+  }, [active]);
+
+  return inset;
+}
+
 function ToolSheet({ open, onClose, title, icon, children }) {
+  const sheetRef = useRef(null);
+  const keyboardInset = useKeyboardInset(open);
+
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
@@ -13,20 +39,53 @@ function ToolSheet({ open, onClose, title, icon, children }) {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open || !sheetRef.current) return undefined;
+    const root = sheetRef.current;
+    const onFocus = (e) => {
+      if (e.target.matches("input, textarea")) {
+        window.setTimeout(() => {
+          e.target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }, 280);
+      }
+    };
+    root.addEventListener("focusin", onFocus);
+    return () => root.removeEventListener("focusin", onFocus);
+  }, [open]);
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
-      <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Close" />
-      <div className="relative mx-auto flex max-h-[85vh] w-full max-w-md flex-col rounded-t-3xl bg-white shadow-2xl sm:max-w-lg">
-        <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-          <span className="text-2xl">{icon}</span>
-          <h2 className="flex-1 text-lg font-extrabold text-slate-800">{title}</h2>
-          <button type="button" onClick={onClose} className="text-2xl text-slate-400">
+    <div className="fixed inset-0 z-[60] flex flex-col sm:justify-end">
+      <button
+        type="button"
+        className="absolute inset-0 hidden bg-black/40 sm:block"
+        onClick={onClose}
+        aria-label="Close"
+      />
+      <div
+        ref={sheetRef}
+        className="relative flex min-h-0 w-full flex-1 flex-col bg-white sm:mx-auto sm:max-h-[min(85dvh,calc(100dvh-env(safe-area-inset-top)))] sm:max-w-lg sm:flex-none sm:rounded-t-3xl sm:shadow-2xl"
+        style={{
+          paddingBottom: keyboardInset
+            ? `calc(${keyboardInset}px + env(safe-area-inset-bottom, 0px))`
+            : "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        <div className="flex shrink-0 items-center gap-2 border-b border-slate-100 px-3 py-3 sm:gap-3 sm:px-5 sm:py-4">
+          <span className="shrink-0 text-xl sm:text-2xl">{icon}</span>
+          <h2 className="min-w-0 flex-1 truncate text-base font-extrabold text-slate-800 sm:text-lg">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="touch-target flex shrink-0 items-center justify-center rounded-full text-xl text-slate-400 active:bg-slate-100"
+          >
             ✕
           </button>
         </div>
-        <div className="overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 py-3 sm:px-5 sm:py-4">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -57,19 +116,19 @@ export function TranslatorPanel({ onClose }) {
 
   return (
     <ToolSheet open title={t("translator")} icon="🌐" onClose={onClose}>
-      <p className="mb-3 text-xs font-semibold text-slate-500">{t("translatorHint")}</p>
+      <p className="mb-3 text-[11px] font-semibold leading-snug text-slate-500 sm:text-xs">{t("translatorHint")}</p>
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={t("translatePlaceholder")}
-        rows={4}
-        className="w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] text-slate-800 outline-none focus:border-teal-400"
+        rows={3}
+        className="mobile-field w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-teal-400"
       />
       <button
         type="button"
         disabled={loading || !text.trim()}
         onClick={submit}
-        className="mt-3 w-full rounded-2xl bg-teal-600 py-3.5 font-extrabold text-white disabled:opacity-50 active:scale-[0.99]"
+        className="mobile-btn mt-3 w-full rounded-2xl bg-teal-600 font-extrabold text-white disabled:opacity-50 active:scale-[0.99]"
       >
         {loading ? "…" : t("translateBtn")}
       </button>
@@ -79,14 +138,14 @@ export function TranslatorPanel({ onClose }) {
           <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4">
             <div className="flex items-start gap-2">
               <SpeakButton text={result.spanish} />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold uppercase tracking-wide text-teal-600">🇲🇽 {t("mexicanSpanish")}</p>
-                <p className="mt-1 text-lg font-bold text-slate-800">{result.spanish}</p>
+                <p className="mt-1 break-words text-lg font-bold text-slate-800">{result.spanish}</p>
               </div>
             </div>
           </div>
           {result.note && (
-            <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900">{result.note}</p>
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium leading-snug text-amber-900">{result.note}</p>
           )}
         </div>
       )}
@@ -127,20 +186,22 @@ export function ConjugatorPanel({ onClose }) {
 
   return (
     <ToolSheet open title={t("conjugator")} icon="📝" onClose={onClose}>
-      <p className="mb-3 text-xs font-semibold text-slate-500">{t("conjugatorHint")}</p>
+      <p className="mb-3 text-[11px] font-semibold leading-snug text-slate-500 sm:text-xs">{t("conjugatorHint")}</p>
       <input
         value={verb}
         onChange={(e) => setVerb(e.target.value)}
         placeholder={t("verbPlaceholder")}
-        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-[15px] font-medium text-slate-800 outline-none focus:border-teal-400"
+        enterKeyHint="go"
+        className="mobile-field w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium text-slate-800 outline-none focus:border-teal-400"
+        onKeyDown={(e) => e.key === "Enter" && verb.trim() && submit()}
       />
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="no-scrollbar -mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
         {Object.entries(TENSE_KEYS).map(([id, key]) => (
           <button
             key={id}
             type="button"
             onClick={() => setTense(id)}
-            className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+            className={`shrink-0 whitespace-nowrap rounded-full px-3 py-2 text-xs font-bold sm:py-1.5 ${
               tense === id ? "bg-teal-600 text-white" : "bg-slate-100 text-slate-600"
             }`}
           >
@@ -152,7 +213,7 @@ export function ConjugatorPanel({ onClose }) {
         type="button"
         disabled={loading || !verb.trim()}
         onClick={submit}
-        className="mt-3 w-full rounded-2xl bg-indigo-600 py-3.5 font-extrabold text-white disabled:opacity-50 active:scale-[0.99]"
+        className="mobile-btn mt-3 w-full rounded-2xl bg-indigo-600 font-extrabold text-white disabled:opacity-50 active:scale-[0.99]"
       >
         {loading ? "…" : t("conjugateBtn")}
       </button>
@@ -160,20 +221,20 @@ export function ConjugatorPanel({ onClose }) {
       {result && (
         <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
           <div className="bg-indigo-50 px-4 py-2 text-center">
-            <p className="text-sm font-extrabold text-indigo-800">{result.infinitive}</p>
+            <p className="truncate text-sm font-extrabold text-indigo-800">{result.infinitive}</p>
             <p className="text-[11px] font-semibold text-indigo-600">{t(TENSE_KEYS[result.tense] || "tensePresent")}</p>
           </div>
           <table className="w-full text-left text-sm">
             <tbody>
               {result.forms.map((row) => (
                 <tr key={row.pronoun} className="border-t border-slate-100">
-                  <td className="px-4 py-2.5 font-bold text-slate-500">{row.pronoun}</td>
-                  <td className="px-4 py-2.5 font-extrabold text-slate-800">{row.form}</td>
+                  <td className="w-[38%] px-3 py-2.5 text-xs font-bold text-slate-500 sm:px-4 sm:text-sm">{row.pronoun}</td>
+                  <td className="px-3 py-2.5 font-extrabold text-slate-800 sm:px-4">{row.form}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="border-t border-slate-100 px-4 py-2 text-[10px] font-medium text-slate-400">
+          <p className="border-t border-slate-100 px-4 py-2 text-[10px] font-medium leading-snug text-slate-400">
             {t("noVosotros")}
           </p>
         </div>

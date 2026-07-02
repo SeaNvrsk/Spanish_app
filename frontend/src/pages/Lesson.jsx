@@ -77,14 +77,14 @@ export default function Lesson() {
   const handleFinish = async (results, score) => {
     // Feed practiced words into the spaced-repetition scheduler.
     if (results.length) {
-      api.post("/review/grade", { items: results, award_xp: false }).catch(() => {});
+      api.post("/review/grade", { items: results, award_pesos: false }).catch(() => {});
     }
     try {
       const { data } = await api.post(`/lessons/${lessonId}/complete`, { lesson_id: lessonId, score });
       setFinished({ ...data, score });
       refresh();
     } catch {
-      setFinished({ xp_earned: 0, score });
+      setFinished({ pesos_earned: 0, score });
     }
   };
 
@@ -92,17 +92,23 @@ export default function Lesson() {
   if (showTheory && lesson.theory && !finished) {
     const th = lesson.theory;
     return (
-      <div className="flex min-h-screen flex-col bg-white">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/")} className="text-2xl text-slate-400">✕</button>
-          <span className="font-extrabold text-slate-700">{localized(lesson.theme, lang)}</span>
+      <div className="flex min-h-dvh flex-col bg-white">
+        <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
+          <button
+            onClick={() => navigate("/")}
+            className="touch-target flex shrink-0 items-center justify-center rounded-full text-xl text-slate-400 active:bg-slate-100"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+          <span className="truncate font-extrabold text-slate-700">{localized(lesson.theme, lang)}</span>
           {lesson.est_minutes && (
             <span className="ml-auto rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-600">
               ~{lesson.est_minutes} {t("minAbbr")}
             </span>
           )}
         </div>
-        <div className="flex-1 space-y-5 overflow-y-auto px-5 pb-6">
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 pb-4 sm:px-5 sm:pb-6">
           {th.day_focus && (
             <div className="rounded-2xl border-2 border-teal-200 bg-teal-50/80 p-4">
               <p className="text-[15px] font-bold text-teal-800">{localized(th.day_focus, lang)}</p>
@@ -144,10 +150,10 @@ export default function Lesson() {
             </div>
           )}
         </div>
-        <div className="sticky bottom-0 bg-white px-5 pb-6 pt-3">
+        <div className="sticky bottom-0 shrink-0 bg-white px-4 pb-safe pt-3 sm:px-5">
           <button
             onClick={() => setShowTheory(false)}
-            className="w-full rounded-2xl bg-teal-600 py-3.5 font-extrabold text-white shadow-lg active:scale-95"
+            className="w-full rounded-2xl bg-teal-600 py-4 font-extrabold text-white shadow-lg active:scale-95 sm:py-3.5"
           >
             {t("startExercises")} →
           </button>
@@ -159,28 +165,22 @@ export default function Lesson() {
   // ---------- Completion screen ----------
   if (finished) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-teal-600 to-emerald-700 px-6 text-center text-white">
-        <div className="animate-pop text-7xl">🎉</div>
-        <h1 className="mt-4 text-2xl font-extrabold">{t("lessonComplete")}</h1>
-        <div className="mt-6 flex gap-4">
-          <div className="rounded-2xl bg-white/15 px-6 py-4">
-            <div className="text-3xl font-black">{finished.score}%</div>
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-teal-600 to-emerald-700 px-5 py-8 text-center text-white sm:px-6">
+        <div className="animate-pop text-6xl sm:text-7xl">🎉</div>
+        <h1 className="mt-4 text-xl font-extrabold sm:text-2xl">{t("lessonComplete")}</h1>
+        <div className="mt-6 flex w-full max-w-sm flex-wrap justify-center gap-3">
+          <div className="min-w-[5.5rem] flex-1 rounded-2xl bg-white/15 px-4 py-4 sm:px-6">
+            <div className="text-2xl font-black sm:text-3xl">{finished.score}%</div>
             <div className="text-xs text-teal-100">score</div>
           </div>
-          <div className="rounded-2xl bg-white/15 px-6 py-4">
-            <div className="text-3xl font-black">+{finished.xp_earned}</div>
-            <div className="text-xs text-teal-100">{t("xp")}</div>
+          <div className="min-w-[5.5rem] flex-1 rounded-2xl bg-white/15 px-4 py-4 sm:px-6">
+            <div className="text-2xl font-black sm:text-3xl">${finished.pesos_earned || 0}</div>
+            <div className="text-xs text-teal-100">{t("pesos")}</div>
           </div>
-          {finished.pesos_earned > 0 && (
-            <div className="rounded-2xl bg-white/15 px-6 py-4">
-              <div className="text-3xl font-black">💰{finished.pesos_earned}</div>
-              <div className="text-xs text-teal-100">{t("pesos")}</div>
-            </div>
-          )}
         </div>
         <button
           onClick={() => navigate("/")}
-          className="mt-10 w-full max-w-xs rounded-xl bg-white py-3.5 font-extrabold text-teal-700 shadow-lg active:scale-95"
+          className="mt-8 w-full max-w-xs rounded-xl bg-white py-4 font-extrabold text-teal-700 shadow-lg active:scale-95 sm:mt-10 sm:py-3.5"
         >
           {t("backToLessons")}
         </button>

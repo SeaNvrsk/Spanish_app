@@ -26,7 +26,8 @@ class User(Base):
     avatar = Column(String, default="🦊")  # emoji avatar, fun for family
     ui_language = Column(String, default="en")  # en | ru | es
 
-    xp = Column(Integer, default=0, nullable=False)
+    # Legacy DB column name "xp" — stores pesos directly.
+    pesos = Column("xp", Integer, default=0, nullable=False)
     current_streak = Column(Integer, default=0, nullable=False)
     longest_streak = Column(Integer, default=0, nullable=False)
     last_active_date = Column(Date, nullable=True)
@@ -52,7 +53,7 @@ class LessonProgress(Base):
     completed = Column(Boolean, default=False, nullable=False)
     best_score = Column(Integer, default=0, nullable=False)  # 0-100 (%)
     stars = Column(Integer, default=0, nullable=False)  # 0-3
-    xp_earned = Column(Integer, default=0, nullable=False)
+    pesos_earned = Column("xp_earned", Integer, default=0, nullable=False)
     attempts = Column(Integer, default=0, nullable=False)
     last_completed_at = Column(DateTime, nullable=True)
 
@@ -89,8 +90,8 @@ class DailyActivity(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     day = Column(Date, default=date.today, nullable=False)
-    xp = Column(Integer, default=0, nullable=False)
-    review_xp = Column(Integer, default=0, nullable=False)  # portion from Daily Review (for the daily cap)
+    pesos = Column("xp", Integer, default=0, nullable=False)
+    review_pesos = Column("review_xp", Integer, default=0, nullable=False)
     lessons_completed = Column(Integer, default=0, nullable=False)
 
     user = relationship("User", back_populates="activity")

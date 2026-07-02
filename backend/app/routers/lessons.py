@@ -68,7 +68,7 @@ def curriculum(current: User = Depends(get_current_user), db: Session = Depends(
                     "day_in_week": day["day_in_week"],
                     "title": day["title"],
                     "icon": day["icon"],
-                    "xp": day["xp"],
+                    "pesos": day["pesos"],
                     "new_vocab_count": day.get("new_vocab_count", 0),
                     "est_minutes": day.get("est_minutes", 15),
                     "has_theory": day.get("theory") is not None,

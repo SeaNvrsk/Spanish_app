@@ -10,7 +10,7 @@ export default function Review() {
   const navigate = useNavigate();
   const { refresh } = useAuth();
 
-  const [queue, setQueue] = useState(null); // {count, exercises}
+  const [queue, setQueue] = useState(null);
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(null);
 
@@ -20,11 +20,11 @@ export default function Review() {
 
   const handleFinish = async (results) => {
     try {
-      const { data } = await api.post("/review/grade", { items: results, award_xp: true });
+      const { data } = await api.post("/review/grade", { items: results, award_pesos: true });
       setFinished(data);
       refresh();
     } catch {
-      setFinished({ xp_earned: 0 });
+      setFinished({ pesos_earned: 0 });
     }
   };
 
@@ -36,19 +36,13 @@ export default function Review() {
 
   if (finished) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-indigo-600 to-purple-700 px-6 text-center text-white">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-gradient-to-b from-indigo-600 to-purple-700 px-5 py-8 text-center text-white sm:px-6">
         <div className="animate-pop text-7xl">🧠</div>
         <h1 className="mt-4 text-2xl font-extrabold">{t("reviewComplete")}</h1>
-                    <div className="mt-6 flex gap-4">
-                      <div className="rounded-2xl bg-white/15 px-6 py-5">
-                        <div className="text-4xl font-black">+{finished.xp_earned || 0}</div>
-                        <div className="text-xs text-indigo-100">{t("xp")}</div>
-                      </div>
-                      <div className="rounded-2xl bg-white/15 px-6 py-5">
-                        <div className="text-4xl font-black">💰{Math.floor((finished.xp_earned || 0) * 0.25)}</div>
-                        <div className="text-xs text-indigo-100">{t("pesos")}</div>
-                      </div>
-                    </div>
+        <div className="mt-6 rounded-2xl bg-white/15 px-8 py-5">
+          <div className="text-4xl font-black">${finished.pesos_earned || 0}</div>
+          <div className="text-xs text-indigo-100">{t("pesos")}</div>
+        </div>
         <button
           onClick={() => navigate("/")}
           className="mt-10 w-full max-w-xs rounded-xl bg-white py-3.5 font-extrabold text-indigo-700 shadow-lg active:scale-95"
@@ -59,7 +53,6 @@ export default function Review() {
     );
   }
 
-  // Start screen
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
       {queue.count === 0 ? (

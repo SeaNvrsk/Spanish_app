@@ -8,7 +8,7 @@ from sqlalchemy import text, inspect
 
 from .config import get_settings
 from .database import Base, engine
-from .routers import auth, users, lessons, progress, stats, tts, review, pronunciation, rewards, tools
+from .routers import auth, users, lessons, progress, stats, tts, review, pronunciation, rewards, tools, profile
 
 settings = get_settings()
 
@@ -45,7 +45,28 @@ def _ensure_columns():
             )
 
 
+def _migrate_xp_to_pesos():
+    """One-time conversion: legacy XP points → pesos (1 XP = 0.25 peso)."""
+    with engine.begin() as conn:
+        conn.execute(text("CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT)"))
+        row = conn.execute(text("SELECT value FROM app_meta WHERE key='xp_to_pesos_v1'")).fetchone()
+        if row and row[0] == "1":
+            return
+        conn.execute(text("UPDATE users SET xp = CAST(ROUND(xp * 0.25) AS INTEGER)"))
+        conn.execute(text(
+            "UPDATE daily_activity SET xp = CAST(ROUND(xp * 0.25) AS INTEGER), "
+            "review_xp = CAST(ROUND(review_xp * 0.25) AS INTEGER)"
+        ))
+        conn.execute(text(
+            "UPDATE lesson_progress SET xp_earned = CAST(ROUND(xp_earned * 0.25) AS INTEGER)"
+        ))
+        conn.execute(text(
+            "INSERT OR REPLACE INTO app_meta (key, value) VALUES ('xp_to_pesos_v1', '1')"
+        ))
+
+
 _ensure_columns()
+_migrate_xp_to_pesos()
 
 app = FastAPI(title=settings.app_name, version="1.0.0")
 
@@ -70,6 +91,7 @@ app.include_router(review.router)
 app.include_router(pronunciation.router)
 app.include_router(rewards.router)
 app.include_router(tools.router)
+app.include_router(profile.router)
 
 
 @app.get("/api/health")

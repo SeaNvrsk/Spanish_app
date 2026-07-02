@@ -2,12 +2,82 @@
 
 :root {
   color-scheme: light;
+  --nav-height: 4.25rem;
+  --field-height: 3.25rem;
+  --field-font: 1rem;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  height: 100%;
+  height: 100dvh;
+  font-size: 16px;
+}
+
+/* Portrait phone — primary target (px sizes survive broken rem scaling) */
+@media (orientation: portrait) and (max-width: 768px) {
+  html {
+    font-size: 22px;
+  }
+
+  :root {
+    --nav-height: 5rem;
+    --field-height: 56px;
+    --field-font: 20px;
+  }
+}
+
+html.is-portrait.is-mobile {
+  font-size: 22px;
+}
+
+html.is-portrait.is-mobile .mobile-field,
+html.is-portrait.is-mobile .mobile-btn {
+  min-height: 56px;
+  font-size: 20px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+html.is-portrait.is-mobile .lang-btn {
+  min-height: 80px;
+  font-size: 42px;
+}
+
+html.is-portrait.is-mobile .lang-btn-label {
+  font-size: 13px;
+}
+
+html.is-portrait.is-mobile .login-header .login-emoji {
+  font-size: 72px;
+}
+
+html.is-portrait.is-mobile .login-header h1 {
+  font-size: 28px;
+}
+
+html.is-portrait.is-mobile .login-header p {
+  font-size: 17px;
+}
+
+html.is-portrait.is-mobile .login-form-sheet h2 {
+  font-size: 26px;
+}
+
+html.is-mobile #root,
+html.is-mobile #root > * {
+  width: 100%;
+  max-width: 100%;
 }
 
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 100vw;
 }
 
 body {
@@ -15,14 +85,183 @@ body {
   font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   background: #f8fafc;
-  /* Respect iOS safe areas */
+  overscroll-behavior-y: none;
+  overflow-x: hidden;
   padding-top: env(safe-area-inset-top);
 }
 
-/* Smooth, app-like tap behavior on mobile */
+input,
+textarea,
+select {
+  font-size: max(16px, 1em);
+}
+
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+.pb-nav {
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.pb-safe {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+}
+
+.mobile-field {
+  min-height: var(--field-height);
+  font-size: var(--field-font);
+  line-height: 1.4;
+}
+
+.mobile-btn {
+  min-height: var(--field-height);
+  font-size: var(--field-font);
+}
+
+/* Portrait: language pills stretch full width */
+.lang-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.lang-btn {
+  display: flex;
+  min-height: 4.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-radius: 1rem;
+  padding: 0.65rem 0.5rem;
+  font-size: 2.25rem;
+  line-height: 1;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .lang-btn {
+    min-height: 5rem;
+    font-size: 2.5rem;
+  }
+}
+
+.lang-btn:active {
+  transform: scale(0.96);
+}
+
+.lang-btn-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .lang-btn-label {
+    font-size: 0.85rem;
+  }
+}
+
+/* Portrait login — native app feel */
+.login-screen {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  background: linear-gradient(to bottom, #0d9488, #047857);
+}
+
+.login-header {
+  flex-shrink: 0;
+  padding: 1rem 1.25rem 0.5rem;
+  text-align: center;
+  color: white;
+}
+
+.login-form-sheet {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.75rem;
+  border-radius: 1.75rem 1.75rem 0 0;
+  background: white;
+  padding: 1.5rem 1.25rem;
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 32px rgb(0 0 0 / 0.15);
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .login-form-sheet {
+    padding: 1.75rem 1.25rem;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .login-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .login-header .login-emoji {
+    font-size: 4.5rem;
+  }
+
+  .login-form-sheet h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.login-header .login-emoji {
+  font-size: 3.75rem;
+  line-height: 1;
+}
+
 button {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+.bottom-nav-item {
+  display: flex;
+  min-height: 3.5rem;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  overflow: hidden;
+  padding: 0.45rem 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1.05;
+  text-align: center;
+}
+
+.bottom-nav-item > span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-nav-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .bottom-nav-item {
+    min-height: 4.25rem;
+    font-size: 0.68rem;
+    gap: 0.25rem;
+  }
+
+  .bottom-nav-icon {
+    font-size: 1.65rem;
+  }
 }
 
 @keyframes pop {

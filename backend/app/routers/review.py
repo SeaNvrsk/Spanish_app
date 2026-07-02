@@ -9,11 +9,11 @@ from ..database import get_db
 from ..deps import get_current_user
 from ..models import User, Card, DailyActivity
 from ..curriculum.builder import build_quiz, all_vocab_pool
-from ..gamification import update_streak, bump_daily, REVIEW_DAILY_XP_CAP
+from ..gamification import update_streak, bump_daily, REVIEW_DAILY_PESOS_CAP
 
 router = APIRouter(prefix="/api/review", tags=["review"])
 
-REVIEW_XP_PER_CARD = 2
+REVIEW_PESOS_PER_CARD = 1
 DAILY_QUEUE_LIMIT = 20
 
 
@@ -26,12 +26,10 @@ class GradeItem(BaseModel):
 
 class GradePayload(BaseModel):
     items: List[GradeItem]
-    award_xp: bool = False  # True when this is a standalone Daily Review session
+    award_pesos: bool = False
 
 
 def _apply_sm2(card: Card, correct: bool):
-    """Lightweight SM-2: correct pushes the interval out (1→3→8→20...);
-    a mistake resets it and lowers ease, so the word comes back sooner."""
     if correct:
         card.reps += 1
         if card.reps == 1:
@@ -52,10 +50,9 @@ def _apply_sm2(card: Card, correct: bool):
 
 @router.post("/grade")
 def grade(payload: GradePayload, current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Feed word results (from a lesson or a review session) into the SRS scheduler."""
     updated = 0
     correct_count = 0
-    cache = {}  # reuse the same Card object if a word repeats within this payload
+    cache = {}
     for item in payload.items:
         if not item.word_es:
             continue
@@ -79,25 +76,24 @@ def grade(payload: GradePayload, current: User = Depends(get_current_user), db: 
             correct_count += 1
         updated += 1
 
-    xp_earned = 0
-    if payload.award_xp and correct_count:
+    pesos_earned = 0
+    if payload.award_pesos and correct_count:
         today = date.today()
-        # Anti-inflation cap: at most REVIEW_DAILY_XP_CAP review XP per day.
         today_row = (
             db.query(DailyActivity)
             .filter(DailyActivity.user_id == current.id, DailyActivity.day == today)
             .first()
         )
-        already = (today_row.review_xp or 0) if today_row else 0
-        allowed = max(0, REVIEW_DAILY_XP_CAP - already)
-        xp_earned = min(correct_count * REVIEW_XP_PER_CARD, allowed)
-        if xp_earned > 0:
-            current.xp += xp_earned
+        already = (today_row.review_pesos or 0) if today_row else 0
+        allowed = max(0, REVIEW_DAILY_PESOS_CAP - already)
+        pesos_earned = min(correct_count * REVIEW_PESOS_PER_CARD, allowed)
+        if pesos_earned > 0:
+            current.pesos += pesos_earned
             update_streak(current, today)
-            bump_daily(db, current, today, xp_earned, completed=False, review_xp=xp_earned)
+            bump_daily(db, current, today, pesos_earned, completed=False, review_pesos=pesos_earned)
 
     db.commit()
-    return {"updated": updated, "xp_earned": xp_earned, "total_xp": current.xp}
+    return {"updated": updated, "pesos_earned": pesos_earned, "total_pesos": current.pesos}
 
 
 @router.get("/status")
@@ -110,7 +106,6 @@ def status(current: User = Depends(get_current_user), db: Session = Depends(get_
 
 @router.get("/queue")
 def queue(current: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Return today's due cards turned into quiz exercises for a Daily Review."""
     today = date.today()
     cards = (
         db.query(Card)
@@ -126,6 +121,6 @@ def queue(current: User = Depends(get_current_user), db: Session = Depends(get_d
     exercises = build_quiz(vocab, all_vocab_pool(), seed=f"review-{current.id}-{today}") if vocab else []
     return {
         "count": len(vocab),
-        "xp_per_card": REVIEW_XP_PER_CARD,
+        "pesos_per_card": REVIEW_PESOS_PER_CARD,
         "exercises": exercises,
     }

@@ -24,9 +24,9 @@ AVATARS = ["🦊", "🐱", "🐶", "🐼", "🦉", "🐸", "🦁", "🐨", "🐵
 TOTAL_WEEKS = 52
 DAYS_PER_WEEK = 7           # 6 lessons + 1 exam
 LESSONS_PER_WEEK = 6
-XP_LESSON = 20
-XP_EXAM = 60
-XP_CAPSTONE = 150
+PESOS_LESSON = 5
+PESOS_EXAM = 15
+PESOS_CAPSTONE = 38
 NEW_WORDS_MIN_PER_DAY = 4
 REVIEW_WORDS_PER_DAY = 6
 WITHIN_WEEK_REVIEW = 3          # quiz-only review of earlier words this week (from day 3)
@@ -271,7 +271,7 @@ def _day_lesson(lid, week_meta, day_in_week, global_day, new_vocab, review_pool,
         "day": global_day, "level": week_meta["level"], "icon": week_meta["icon"],
         "theme": week_meta["theme"], "title": week_meta["theme"],
         "theory": th,
-        "xp": XP_LESSON, "new_vocab_count": len(new_vocab),
+        "pesos": PESOS_LESSON, "new_vocab_count": len(new_vocab),
         "est_minutes": _est_minutes(exercises, has_theory=th is not None),
         "exercises": exercises,
     }
@@ -295,7 +295,7 @@ def _exam_lesson(lid, week_meta, global_day, week_vocab, review_pool, distractor
         "day": global_day, "level": week_meta["level"], "icon": "📝",
         "theme": t("Weekly Exam", "Недельный экзамен", "Examen semanal"),
         "title": t("Weekly Exam — bonus XP!", "Недельный экзамен — бонус XP!", "Examen semanal — ¡XP extra!"),
-        "theory": None, "xp": XP_EXAM, "new_vocab_count": 0,
+        "theory": None, "pesos": PESOS_EXAM, "new_vocab_count": 0,
         "est_minutes": _est_minutes(exercises), "exercises": exercises,
     }
 
@@ -422,7 +422,7 @@ def _build():
         "level": "B1", "icon": "🎓",
         "theme": t("Final Graduation", "Финальный экзамен", "Graduación final"),
         "title": t("Graduation Exam 🎓", "Выпускной экзамен 🎓", "Examen de graduación 🎓"),
-        "theory": None, "xp": XP_CAPSTONE, "new_vocab_count": 0, "exercises": cap_ex,
+        "theory": None, "pesos": PESOS_CAPSTONE, "new_vocab_count": 0, "exercises": cap_ex,
     }
     lessons_by_id["capstone"] = capstone
     weeks_out[-1]["days"].append(capstone)
@@ -498,5 +498,5 @@ def total_lessons() -> int:
 
 __all__ = [
     "get_curriculum", "get_weeks", "get_all_lessons", "get_lesson",
-    "lesson_ids_for_level", "total_lessons", "AVATARS", "XP_LESSON",
+    "lesson_ids_for_level", "total_lessons", "AVATARS", "PESOS_LESSON",
 ]
