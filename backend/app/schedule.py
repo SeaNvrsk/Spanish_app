@@ -48,3 +48,21 @@ def lesson_schedule_meta(lesson_global_day: int, today: date | None = None, star
         "unlock_date": unlock_date_for_day(lesson_global_day, start).isoformat(),
         "is_today": unlocked and lesson_global_day == prog_day,
     }
+
+
+def user_has_all_lessons_unlocked(user) -> bool:
+    """Admins can open any lesson to review content."""
+    return bool(getattr(user, "is_admin", False))
+
+
+def lesson_schedule_meta_for_user(
+    user,
+    lesson_global_day: int,
+    today: date | None = None,
+    start: date | None = None,
+) -> dict:
+    meta = lesson_schedule_meta(lesson_global_day, today, start)
+    if user_has_all_lessons_unlocked(user):
+        meta = dict(meta)
+        meta["unlocked"] = True
+    return meta

@@ -13,6 +13,7 @@ from ..config import get_settings
 from ..conjugation import TENSES, conjugate
 from ..deps import get_current_user
 from ..models import User
+from ..usage_examples import lookup_usage_examples
 
 router = APIRouter(prefix="/api/tools", tags=["tools"])
 settings = get_settings()
@@ -53,10 +54,16 @@ class ExplainRequest(BaseModel):
     context_ru: str = ""
 
 
+class UsageExample(BaseModel):
+    es: str
+    ru: str
+
+
 class ExplainResponse(BaseModel):
     spanish: str
     explanation_ru: str
-    example_es: str
+    examples: list[UsageExample] = Field(default_factory=list)
+    example_es: str = ""
     cached: bool = False
 
 
@@ -172,12 +179,13 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
 
     system = (
         "You teach Mexican Spanish (es-MX) to Russian-speaking learners living in Mexico. "
-        "The example sentence MUST be natural Mexican Spanish as spoken in Mexico City — NOT Spain Spanish (es-ES). "
+        "The example sentences MUST be natural Mexican Spanish as spoken in Mexico City — NOT Spain Spanish (es-ES). "
         "Never use vosotros/vosotras; use ustedes. Prefer Mexican vocabulary (carro, celular, chamba, ahorita, "
         "¿qué onda?, platicar, mande, etc.) over Peninsular forms (coche, móvil, trabajo as default, vale, coger bus). "
         "Return ONLY valid JSON: "
         '{"explanation_ru": "2-4 clear sentences IN RUSSIAN: core meaning, register, how Mexicans use it", '
-        '"example_es": "one short everyday sentence IN MEXICAN SPANISH ONLY — must sound native in Mexico, not Spain"}'
+        '"examples": [{"es": "short everyday sentence IN MEXICAN SPANISH", "ru": "Russian translation"}, '
+        '{"es": "second different sentence IN MEXICAN SPANISH", "ru": "Russian translation"}]}'
     )
     user = f"Word/phrase: {spanish}\n{gloss}"
 
@@ -191,7 +199,7 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
         ],
         "response_format": {"type": "json_object"},
         "temperature": 0.5,
-        "max_tokens": 450,
+        "max_tokens": 650,
     }
 
     async with httpx.AsyncClient(timeout=45) as client:
@@ -201,26 +209,74 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
     raw = resp.json()["choices"][0]["message"]["content"]
     data = json.loads(raw)
     explanation_ru = (data.get("explanation_ru") or "").strip()
-    example_es = (data.get("example_es") or "").strip()
+    raw_examples = data.get("examples") or []
+    examples: list[dict] = []
+    if isinstance(raw_examples, list):
+        for item in raw_examples[:2]:
+            if not isinstance(item, dict):
+                continue
+            es = (item.get("es") or "").strip()
+            ru = (item.get("ru") or "").strip()
+            if es:
+                examples.append({"es": es, "ru": ru})
+    if not examples:
+        legacy = (data.get("example_es") or "").strip()
+        if legacy:
+            examples.append({"es": legacy, "ru": ""})
     if not explanation_ru:
         raise HTTPException(status_code=502, detail="Empty explanation")
-    return {"explanation_ru": explanation_ru, "example_es": example_es or spanish}
+    if not examples:
+        examples.append({"es": spanish, "ru": ""})
+    return {
+        "explanation_ru": explanation_ru,
+        "examples": examples,
+        "example_es": examples[0]["es"],
+    }
 
 
 def _normalize_explain_cached(cached: dict, spanish: str) -> dict:
     """Support legacy English cache entries."""
+    raw_examples = cached.get("examples")
+    if isinstance(raw_examples, list) and raw_examples:
+        examples = []
+        for item in raw_examples[:2]:
+            if not isinstance(item, dict):
+                continue
+            es = (item.get("es") or "").strip()
+            ru = (item.get("ru") or "").strip()
+            if es:
+                examples.append({"es": es, "ru": ru})
+    else:
+        legacy = (cached.get("example_es") or cached.get("example") or spanish).strip()
+        examples = [{"es": legacy, "ru": ""}] if legacy else []
+
     if cached.get("explanation_ru"):
-        return {
-            "explanation_ru": cached["explanation_ru"].strip(),
-            "example_es": (cached.get("example_es") or spanish).strip(),
-        }
-    meaning = (cached.get("meaning") or "").strip()
-    usage = (cached.get("mexico_usage") or "").strip()
-    parts = [p for p in (meaning, usage) if p]
+        explanation_ru = cached["explanation_ru"].strip()
+    else:
+        meaning = (cached.get("meaning") or "").strip()
+        usage = (cached.get("mexico_usage") or "").strip()
+        parts = [p for p in (meaning, usage) if p]
+        explanation_ru = "\n".join(parts) if parts else spanish
+
+    if not examples:
+        examples = [{"es": spanish, "ru": ""}]
+
     return {
-        "explanation_ru": "\n".join(parts) if parts else spanish,
-        "example_es": (cached.get("example") or cached.get("example_es") or spanish).strip(),
+        "explanation_ru": explanation_ru,
+        "examples": examples,
+        "example_es": examples[0]["es"],
     }
+
+
+def _explain_payload(spanish: str, payload: dict, cached: bool) -> ExplainResponse:
+    examples = [UsageExample(**e) for e in payload.get("examples", [])[:2]]
+    return ExplainResponse(
+        spanish=spanish,
+        explanation_ru=payload["explanation_ru"],
+        examples=examples,
+        example_es=payload.get("example_es") or (examples[0].es if examples else ""),
+        cached=cached,
+    )
 
 
 @router.get("/tenses")
@@ -258,12 +314,16 @@ def conjugate_verb(body: ConjugateRequest, _: User = Depends(get_current_user)):
 @router.post("/explain", response_model=ExplainResponse)
 async def explain_spanish(body: ExplainRequest, _: User = Depends(get_current_user)):
     spanish = body.spanish.strip()
-    key = _cache_key(f"ru-v3-mx|{spanish}|{body.context_ru}|{body.context_en}")
+    curated = lookup_usage_examples(spanish)
+    if curated:
+        return _explain_payload(spanish, curated, cached=False)
+
+    key = _cache_key(f"ru-v4-mx|{spanish}|{body.context_ru}|{body.context_en}")
     cached = _load_explain(key)
     if cached:
         norm = _normalize_explain_cached(cached, spanish)
-        return ExplainResponse(spanish=spanish, cached=True, **norm)
+        return _explain_payload(spanish, norm, cached=True)
 
     result = await _explain_ai(spanish, body.context_en.strip(), body.context_ru.strip())
     _store_explain(key, result)
-    return ExplainResponse(spanish=spanish, cached=False, **result)
+    return _explain_payload(spanish, result, cached=False)

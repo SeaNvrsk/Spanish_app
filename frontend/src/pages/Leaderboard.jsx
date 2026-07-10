@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import { useI18n } from "../i18n";
 import { useAuth } from "../auth";
+import { MemberStatsPanel } from "../components/StatsPanels";
 
 const medal = (rank) => (rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : null);
 
 export default function Leaderboard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { user } = useAuth();
   const [rows, setRows] = useState(null);
   const [rewards, setRewards] = useState(null);
@@ -16,9 +17,12 @@ export default function Leaderboard() {
     api.get("/leaderboard").then(({ data }) => setRows(data));
     api.get("/rewards/summary").then(({ data }) => setRewards(data)).catch(() => {});
     if (user?.is_admin) {
-      api.get("/admin/family-overview").then(({ data }) => setOverview(data)).catch(() => {});
+      api
+        .get("/admin/family-overview")
+        .then(({ data }) => setOverview(data))
+        .catch(() => setOverview({ members: [], competitors: 3, month: "" }));
     }
-  }, [user?.is_admin]);
+  }, [user?.id, user?.is_admin]);
 
   if (!rows) return <div className="p-10 text-center text-4xl">🌮</div>;
 
@@ -31,6 +35,19 @@ export default function Leaderboard() {
         <div className="mb-4 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
           <p className="text-sm font-extrabold text-violet-800">👑 {t("adminBadge")}</p>
           <p className="mt-1 text-xs text-violet-600">{t("adminExcluded")}</p>
+        </div>
+      )}
+
+      {/* Admin: full family dashboard */}
+      {isAdmin && overview && overview.members?.length > 0 && (
+        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-extrabold text-slate-800">📊 {t("familyOverview")}</h2>
+          <p className="mb-3 text-xs text-slate-500">{t("familyOverviewSub")}</p>
+          <div className="space-y-2">
+            {overview.members.map((m, i) => (
+              <MemberStatsPanel key={m.id} member={m} t={t} lang={lang} defaultOpen={i === 0} />
+            ))}
+          </div>
         </div>
       )}
 
@@ -85,51 +102,6 @@ export default function Leaderboard() {
           )}
 
           <p className="mt-3 text-[11px] leading-snug text-amber-50">{t("prizeNote")}</p>
-        </div>
-      )}
-
-      {/* Admin: full family dashboard */}
-      {isAdmin && overview && (
-        <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-lg font-extrabold text-slate-800">📊 {t("familyOverview")}</h2>
-          <p className="mb-3 text-xs text-slate-500">{t("familyOverviewSub")}</p>
-          <div className="space-y-2">
-            {overview.members.map((m) => (
-              <div
-                key={m.id}
-                className={`rounded-xl border px-3 py-3 ${
-                  m.is_admin ? "border-violet-200 bg-violet-50" : "border-slate-100 bg-slate-50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{m.avatar}</span>
-                  <div className="flex-1">
-                    <p className="font-extrabold text-slate-800">
-                      {m.name}
-                      {m.is_admin && (
-                        <span className="ml-2 rounded-full bg-violet-200 px-2 py-0.5 text-[10px] font-bold text-violet-700">
-                          {t("adminBadge")}
-                        </span>
-                      )}
-                      {!m.is_admin && m.rank && (
-                        <span className="ml-2 text-xs font-bold text-amber-600">
-                          #{m.rank}
-                        </span>
-                      )}
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      {m.cefr_level} · {m.lessons_completed} {t("lessonsDone")} · 🔥 {m.current_streak}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-amber-600">${m.month_pesos}</p>
-                    <p className="text-[10px] text-slate-400">{t("monthPesos")}</p>
-                    <p className="text-xs font-bold text-amber-700">${m.pesos}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 

@@ -155,7 +155,7 @@
     "en": "Mrs./ma'am"
   },
   "amigo": {
-    "file": "amigo.png",
+    "file": "amigo.webp",
     "es": "amigo",
     "en": "friend (m)"
   },
@@ -327,7 +327,7 @@
   "como-amanecio": {
     "file": "como-amanecio.webp",
     "es": "¿Cómo amaneció?",
-    "en": "How did you wake up?"
+    "en": "How are you this morning?"
   },
   "que-le-vaya-bien": {
     "file": "que-le-vaya-bien.webp",
@@ -733,5 +733,370 @@
     "file": "la-cantidad.webp",
     "es": "la cantidad",
     "en": "quantity"
+  },
+  "soy": {
+    "file": "soy.webp",
+    "es": "soy",
+    "en": "I am (ser)"
+  },
+  "eres": {
+    "file": "eres.webp",
+    "es": "eres",
+    "en": "you are"
+  },
+  "es": {
+    "file": "es.webp",
+    "es": "es",
+    "en": "he/she is"
+  },
+  "somos": {
+    "file": "somos.webp",
+    "es": "somos",
+    "en": "we are"
+  },
+  "son": {
+    "file": "son.webp",
+    "es": "son",
+    "en": "they are"
+  },
+  "estoy": {
+    "file": "estoy.webp",
+    "es": "estoy",
+    "en": "I am (estar)"
+  },
+  "estas": {
+    "file": "estas.webp",
+    "es": "estás",
+    "en": "you are"
+  },
+  "esta": {
+    "file": "esta.webp",
+    "es": "está",
+    "en": "he/she is"
+  },
+  "estamos": {
+    "file": "estamos.webp",
+    "es": "estamos",
+    "en": "we are"
+  },
+  "estan": {
+    "file": "estan.webp",
+    "es": "están",
+    "en": "they are"
+  },
+  "aqui": {
+    "file": "aqui.webp",
+    "es": "aquí",
+    "en": "here"
+  },
+  "alla": {
+    "file": "alla.webp",
+    "es": "allá",
+    "en": "there"
+  },
+  "cansado": {
+    "file": "cansado.webp",
+    "es": "cansado",
+    "en": "tired"
+  },
+  "feliz": {
+    "file": "feliz.webp",
+    "es": "feliz",
+    "en": "happy"
+  },
+  "de-mexico": {
+    "file": "de-mexico.webp",
+    "es": "de México",
+    "en": "from Mexico"
+  },
+  "quien": {
+    "file": "quien.webp",
+    "es": "¿quién?",
+    "en": "who?"
+  },
+  "donde": {
+    "file": "donde.webp",
+    "es": "¿dónde?",
+    "en": "where?"
+  },
+  "bien": {
+    "file": "bien.webp",
+    "es": "bien",
+    "en": "well/fine"
+  },
+  "mal": {
+    "file": "mal.webp",
+    "es": "mal",
+    "en": "bad(ly)"
+  },
+  "muy": {
+    "file": "muy.webp",
+    "es": "muy",
+    "en": "very"
+  },
+  "tambien": {
+    "file": "tambien.webp",
+    "es": "también",
+    "en": "also"
+  },
+  "pero": {
+    "file": "pero.webp",
+    "es": "pero",
+    "en": "but"
+  },
+  "ser": {
+    "file": "ser.webp",
+    "es": "ser",
+    "en": "to be (permanent)"
+  },
+  "estar": {
+    "file": "estar.webp",
+    "es": "estar",
+    "en": "to be (temporary)"
+  },
+  "usted-es": {
+    "file": "usted-es.webp",
+    "es": "usted es",
+    "en": "you are (formal, ser)"
+  },
+  "usted-esta": {
+    "file": "usted-esta.webp",
+    "es": "usted está",
+    "en": "you are (formal, estar)"
+  },
+  "bueno": {
+    "file": "bueno.webp",
+    "es": "bueno",
+    "en": "good (m)"
+  },
+  "buena": {
+    "file": "buena.webp",
+    "es": "buena",
+    "en": "good (f)"
+  },
+  "malo": {
+    "file": "malo.webp",
+    "es": "malo",
+    "en": "bad (m)"
+  },
+  "mala": {
+    "file": "mala.webp",
+    "es": "mala",
+    "en": "bad (f)"
+  },
+  "alto": {
+    "file": "alto.webp",
+    "es": "alto",
+    "en": "tall (m)"
+  },
+  "alta": {
+    "file": "alta.webp",
+    "es": "alta",
+    "en": "tall (f)"
+  },
+  "bajo": {
+    "file": "bajo.webp",
+    "es": "bajo",
+    "en": "short (m)"
+  },
+  "baja": {
+    "file": "baja.webp",
+    "es": "baja",
+    "en": "short (f)"
+  },
+  "triste": {
+    "file": "triste.webp",
+    "es": "triste",
+    "en": "sad"
+  },
+  "enfermo": {
+    "file": "enfermo.webp",
+    "es": "enfermo",
+    "en": "sick (m)"
+  },
+  "enferma": {
+    "file": "enferma.webp",
+    "es": "enferma",
+    "en": "sick (f)"
+  },
+  "ocupado": {
+    "file": "ocupado.webp",
+    "es": "ocupado",
+    "en": "busy (m)"
+  },
+  "ocupada": {
+    "file": "ocupada.webp",
+    "es": "ocupada",
+    "en": "busy (f)"
+  },
+  "abierto": {
+    "file": "abierto.webp",
+    "es": "abierto",
+    "en": "open (m)"
+  },
+  "cerrado": {
+    "file": "cerrado.webp",
+    "es": "cerrado",
+    "en": "closed (m)"
+  },
+  "de": {
+    "file": "de.webp",
+    "es": "de",
+    "en": "from/of"
+  },
+  "en": {
+    "file": "en.webp",
+    "es": "en",
+    "en": "in/on"
+  },
+  "mexico": {
+    "file": "mexico.webp",
+    "es": "México",
+    "en": "Mexico"
+  },
+  "espanol": {
+    "file": "espanol.webp",
+    "es": "español",
+    "en": "Spanish"
+  },
+  "mexicano": {
+    "file": "mexicano.webp",
+    "es": "mexicano",
+    "en": "Mexican (m)"
+  },
+  "mexicana": {
+    "file": "mexicana.webp",
+    "es": "mexicana",
+    "en": "Mexican (f)"
+  },
+  "profesor": {
+    "file": "profesor.webp",
+    "es": "profesor",
+    "en": "teacher (m)"
+  },
+  "profesora": {
+    "file": "profesora.webp",
+    "es": "profesora",
+    "en": "teacher (f)"
+  },
+  "estudiante": {
+    "file": "estudiante.webp",
+    "es": "estudiante",
+    "en": "student"
+  },
+  "amable": {
+    "file": "amable.webp",
+    "es": "amable",
+    "en": "kind"
+  },
+  "inteligente": {
+    "file": "inteligente.webp",
+    "es": "inteligente",
+    "en": "intelligent"
+  },
+  "de-donde-eres": {
+    "file": "de-donde-eres.webp",
+    "es": "¿De dónde eres?",
+    "en": "Where are you from?"
+  },
+  "soy-de": {
+    "file": "soy-de.webp",
+    "es": "Soy de...",
+    "en": "I'm from..."
+  },
+  "estoy-en-la-casa": {
+    "file": "estoy-en-la-casa.webp",
+    "es": "Estoy en la casa.",
+    "en": "I'm at home."
+  },
+  "esta-cerrado": {
+    "file": "esta-cerrado.webp",
+    "es": "Está cerrado.",
+    "en": "It's closed."
+  },
+  "son-las-tres": {
+    "file": "son-las-tres.webp",
+    "es": "Son las tres.",
+    "en": "It's three o'clock."
+  },
+  "es-importante": {
+    "file": "es-importante.webp",
+    "es": "Es importante.",
+    "en": "It's important."
+  },
+  "estoy-contento": {
+    "file": "estoy-contento.webp",
+    "es": "Estoy contento.",
+    "en": "I'm happy."
+  },
+  "como-es": {
+    "file": "como-es.webp",
+    "es": "¿Cómo es?",
+    "en": "What is it like?"
+  },
+  "como-estas-hoy": {
+    "file": "como-estas-hoy.webp",
+    "es": "¿Cómo estás hoy?",
+    "en": "How are you today?"
+  },
+  "serio": {
+    "file": "serio.webp",
+    "es": "serio",
+    "en": "serious (m)"
+  },
+  "seria": {
+    "file": "seria.webp",
+    "es": "seria",
+    "en": "serious (f)"
+  },
+  "joven": {
+    "file": "joven.webp",
+    "es": "joven",
+    "en": "young"
+  },
+  "mayor": {
+    "file": "mayor.webp",
+    "es": "mayor",
+    "en": "older/elder"
+  },
+  "listo": {
+    "file": "listo.webp",
+    "es": "listo",
+    "en": "ready (m)"
+  },
+  "lista": {
+    "file": "lista.webp",
+    "es": "lista",
+    "en": "ready (f)"
+  },
+  "importante": {
+    "file": "importante.webp",
+    "es": "importante",
+    "en": "important"
+  },
+  "posible": {
+    "file": "posible.webp",
+    "es": "posible",
+    "en": "possible"
+  },
+  "imposible": {
+    "file": "imposible.webp",
+    "es": "imposible",
+    "en": "impossible"
+  },
+  "normal": {
+    "file": "normal.webp",
+    "es": "normal",
+    "en": "normal"
+  },
+  "raro": {
+    "file": "raro.webp",
+    "es": "raro",
+    "en": "weird"
+  },
+  "diferente": {
+    "file": "diferente.webp",
+    "es": "diferente",
+    "en": "different"
   }
 }

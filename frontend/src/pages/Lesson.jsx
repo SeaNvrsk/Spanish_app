@@ -76,9 +76,11 @@ export default function Lesson() {
   if (!lesson) return <div className="p-10 text-center text-4xl">🌮</div>;
 
   const handleFinish = async (results, score) => {
-    // Feed practiced words into the spaced-repetition scheduler.
+    // Feed practiced words into the spaced-repetition scheduler first, then
+    // mark the lesson complete. Sequential (not fire-and-forget) so the two
+    // requests don't race each other while creating the same review cards.
     if (results.length) {
-      api.post("/review/grade", { items: results, award_pesos: false }).catch(() => {});
+      await api.post("/review/grade", { items: results, award_pesos: false }).catch(() => {});
     }
     try {
       const { data } = await api.post(`/lessons/${lessonId}/complete`, { lesson_id: lessonId, score });

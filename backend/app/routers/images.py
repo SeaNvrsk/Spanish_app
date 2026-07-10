@@ -21,4 +21,8 @@ def vocab_image(slug: str):
     media = {"webp": "image/webp", "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg"}.get(
         ext, "application/octet-stream"
     )
-    return FileResponse(path, media_type=media, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    return FileResponse(
+        path,
+        media_type=media,
+        headers={"Cache-Control": "public, max-age=86400, must-revalidate"},
+    )

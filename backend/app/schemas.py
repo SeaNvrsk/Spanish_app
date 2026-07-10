@@ -91,9 +91,33 @@ class DailyActivityPublic(BaseModel):
     day: date
     pesos: int
     lessons_completed: int
+    pesos_lessons: int = 0
+    pesos_review: float = 0.0
+    pesos_total: float = 0.0
 
     class Config:
         from_attributes = True
+
+
+class EarningsTotalsPublic(BaseModel):
+    pesos_lessons: int
+    pesos_exams: int
+    pesos_review: float
+    pesos_all: float
+    lessons_completed: int
+    exams_completed: int
+
+
+class LessonEarningsPublic(BaseModel):
+    lesson_id: str
+    title: dict
+    kind: str
+    week: Optional[int] = None
+    best_score: int
+    stars: int
+    pesos_earned: int
+    attempts: int
+    completed_at: Optional[datetime] = None
 
 
 class StatsResponse(BaseModel):
@@ -107,6 +131,9 @@ class StatsResponse(BaseModel):
     total_users: int
     is_admin: bool = False
     activity: List[DailyActivityPublic]
+    earnings_totals: EarningsTotalsPublic
+    lesson_history: List[LessonEarningsPublic]
+    daily_earnings: List[DailyActivityPublic]
 
 
 class FamilyMemberStats(BaseModel):
@@ -122,6 +149,9 @@ class FamilyMemberStats(BaseModel):
     cefr_level: str
     level_progress_percent: int
     rank: Optional[int] = None  # None for admin (excluded from competition)
+    earnings_totals: EarningsTotalsPublic
+    lesson_history: List[LessonEarningsPublic]
+    daily_earnings: List[DailyActivityPublic]
 
 
 class FamilyOverviewResponse(BaseModel):

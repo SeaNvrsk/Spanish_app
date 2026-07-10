@@ -72,9 +72,14 @@ def manifest_has(slug: str) -> bool:
 
 
 def image_url_for(word_es: str) -> Optional[str]:
-    if image_file_for(word_es):
-        return f"/api/images/vocab/{vocab_slug(word_es)}"
-    return None
+    path = image_file_for(word_es)
+    if not path:
+        return None
+    try:
+        ver = int(os.path.getmtime(path))
+    except OSError:
+        ver = 0
+    return f"/api/images/vocab/{vocab_slug(word_es)}?v={ver}"
 
 
 def attach_image(vocab_item: dict) -> dict:

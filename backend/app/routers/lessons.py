@@ -13,16 +13,19 @@ from ..schedule import (
     program_start,
     program_day_for_date,
     max_unlocked_global_day,
-    lesson_schedule_meta,
+    lesson_schedule_meta_for_user,
+    user_has_all_lessons_unlocked,
 )
 from ..msk_time import msk_today
 
 router = APIRouter(prefix="/api", tags=["curriculum"])
 
 
-def _assert_lesson_unlocked(lesson: dict, today: date | None = None) -> None:
-    if not lesson_schedule_meta(lesson["day"], today)["unlocked"]:
-        meta = lesson_schedule_meta(lesson["day"], today)
+def _assert_lesson_unlocked(lesson: dict, user: User, today: date | None = None) -> None:
+    if user_has_all_lessons_unlocked(user):
+        return
+    meta = lesson_schedule_meta_for_user(user, lesson["day"], today)
+    if not meta["unlocked"]:
         raise HTTPException(
             status_code=403,
             detail={
@@ -58,7 +61,7 @@ def curriculum(current: User = Depends(get_current_user), db: Session = Depends(
             out_days = []
             for day in wk["days"]:
                 p = progress.get(day["id"])
-                sched = lesson_schedule_meta(day["day"], today, start)
+                sched = lesson_schedule_meta_for_user(current, day["day"], today, start)
                 level_total += 1
                 if p and p.completed:
                     level_done += 1
@@ -100,12 +103,14 @@ def curriculum(current: User = Depends(get_current_user), db: Session = Depends(
             "completed_lessons": level_done,
             "progress_percent": round(level_done / level_total * 100) if level_total else 0,
         })
+    max_day = max((l.get("day") or 0) for l in all_lessons.values()) if all_lessons else 0
     return {
         "levels": out_levels,
         "program_start_date": start.isoformat(),
         "program_day": prog_day,
-        "max_unlocked_day": max_unlocked_global_day(today, start),
+        "max_unlocked_day": max_day if user_has_all_lessons_unlocked(current) else max_unlocked_global_day(today, start),
         "today_lesson_id": today_lesson_id,
+        "admin_all_lessons": user_has_all_lessons_unlocked(current),
     }
 
 
@@ -114,7 +119,7 @@ async def lesson_detail(lesson_id: str, current: User = Depends(get_current_user
     lesson = get_lesson(lesson_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
-    _assert_lesson_unlocked(lesson)
+    _assert_lesson_unlocked(lesson, current)
     out = copy.deepcopy(lesson)
     if out.get("theory"):
         tip = await resolve_lesson_tip(out)

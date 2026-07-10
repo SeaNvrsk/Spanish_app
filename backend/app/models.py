@@ -95,6 +95,7 @@ class DailyActivity(Base):
     day = Column(Date, default=msk_today, nullable=False)
     pesos = Column("xp", Integer, default=0, nullable=False)
     review_pesos = Column("review_xp", Integer, default=0, nullable=False)  # tenths earned today (cap 50)
+    lesson_pesos = Column(Integer, default=0, nullable=False)  # whole pesos from lessons/exams only
     lessons_completed = Column(Integer, default=0, nullable=False)
 
     user = relationship("User", back_populates="activity")

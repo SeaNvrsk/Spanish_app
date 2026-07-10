@@ -8,7 +8,7 @@ from ..deps import get_current_user
 from ..models import User, LessonProgress
 from ..schemas import LessonResult, CompleteResponse
 from ..curriculum import get_lesson
-from ..schedule import lesson_schedule_meta
+from ..schedule import lesson_schedule_meta_for_user, user_has_all_lessons_unlocked
 from ..msk_time import msk_today, msk_now
 from ..gamification import (
     peso_level as _peso_level,
@@ -17,6 +17,7 @@ from ..gamification import (
     lesson_pesos_for_score,
     lesson_pesos_delta,
 )
+from ..routers.review import seed_lesson_cards, rebalance_learner_cards
 
 router = APIRouter(prefix="/api", tags=["progress"])
 
@@ -44,7 +45,7 @@ def complete_lesson(
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
 
-    if not lesson_schedule_meta(lesson["day"])["unlocked"]:
+    if not user_has_all_lessons_unlocked(current) and not lesson_schedule_meta_for_user(current, lesson["day"])["unlocked"]:
         raise HTTPException(status_code=403, detail="Lesson not unlocked yet")
 
     score = max(0, min(100, payload.score))
@@ -100,7 +101,11 @@ def complete_lesson(
     today = msk_today()
     if earned > 0 or new_completion:
         _update_streak(current, today)
-    _bump_daily(db, current, today, earned, new_completion)
+    _bump_daily(db, current, today, earned, new_completion, lesson_pesos=earned)
+
+    if passed:
+        seed_lesson_cards(db, current.id, lesson)
+        rebalance_learner_cards(db, current.id)
 
     db.commit()
     db.refresh(current)

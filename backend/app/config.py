@@ -46,6 +46,10 @@ class Settings(BaseSettings):
     openai_image_size: str = "1024x1024"  # API minimum; downscaled after download
     openai_image_save_px: int = 512  # flashcards on phone (~max 144px CSS)
     openai_image_save_format: str = "webp"  # webp | png
+    # Unsplash (optional) — photo flashcards via scripts/download_unsplash_vocab_images.py
+    unsplash_access_key: str = ""
+    unsplash_app_id: str = ""
+    unsplash_secret_key: str = ""
     # Comma-separated admin emails (excluded from family rankings; can view all stats).
     admin_emails: str = "an.mexico@icloud.com"
 

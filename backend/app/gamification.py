@@ -2,6 +2,7 @@
 
 from datetime import date, timedelta
 
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
 from .models import User, DailyActivity
@@ -116,10 +117,25 @@ def get_daily(db: Session, user: User, today: date) -> DailyActivity:
         .filter(DailyActivity.user_id == user.id, DailyActivity.day == today)
         .first()
     )
-    if not row:
-        row = DailyActivity(user_id=user.id, day=today, pesos=0, review_pesos=0, lessons_completed=0)
-        db.add(row)
-    return row
+    if row:
+        return row
+    # /review/grade and /lessons/{id}/complete run back-to-back for the same
+    # user+day, so a plain "check then insert" can race and hit the unique
+    # constraint on (user_id, day), crashing the whole request and rolling
+    # back pesos/streak/progress that had already been computed. ON CONFLICT
+    # DO NOTHING makes this race-safe (same fix as Card creation in review.py).
+    stmt = (
+        sqlite_insert(DailyActivity)
+        .values(user_id=user.id, day=today, pesos=0, review_pesos=0, lessons_completed=0)
+        .on_conflict_do_nothing(index_elements=["user_id", "day"])
+    )
+    db.execute(stmt)
+    db.flush()
+    return (
+        db.query(DailyActivity)
+        .filter(DailyActivity.user_id == user.id, DailyActivity.day == today)
+        .first()
+    )
 
 
 def bump_daily(
@@ -129,9 +145,11 @@ def bump_daily(
     pesos: int,
     completed: bool,
     review_pesos: int = 0,
+    lesson_pesos: int = 0,
 ):
     row = get_daily(db, user, today)
     row.pesos += pesos
+    row.lesson_pesos = (row.lesson_pesos or 0) + (lesson_pesos or 0)
     row.review_pesos = (row.review_pesos or 0) + review_pesos
     if completed:
         row.lessons_completed += 1

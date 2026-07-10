@@ -67,7 +67,7 @@ async function probeServerTts() {
 export function useSpeak(profile = "default") {
   const isAngelica = profile === "angelica";
   const endpoint = isAngelica ? "/tts/speak/angelica" : "/tts/speak";
-  const cacheProfile = isAngelica ? "angelica-v13" : "default";
+  const cacheProfile = isAngelica ? "angelica-v13" : "default-v14";
 
   const [speaking, setSpeaking] = useState(false);
   const audioRef = useRef(null);

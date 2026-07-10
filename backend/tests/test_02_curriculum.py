@@ -71,6 +71,15 @@ def test_authored_weeks_present():
     assert len(WEEKS) >= 38
 
 
+def test_weekly_exam_thirty_questions_ten_listen():
+    exam = get_all_lessons()["w01-exam"]
+    exs = exam["exercises"]
+    assert len(exs) == 30
+    listen = [e for e in exs if e["type"] == "listen"]
+    assert len(listen) == 10
+    assert all(e["type"] in ("listen", "choice", "translate") for e in exs)
+
+
 def test_a1_theory_enrichment_per_day():
     """Every A1 lesson day has structured theory: grammar sections, listen examples, day focus."""
     lessons = get_all_lessons()

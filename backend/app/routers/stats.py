@@ -14,10 +14,13 @@ from ..schemas import (
     DailyActivityPublic,
     FamilyOverviewResponse,
     FamilyMemberStats,
+    EarningsTotalsPublic,
+    LessonEarningsPublic,
 )
 from ..curriculum import get_curriculum, get_all_lessons
 from ..family import competitors, FAMILY_COMPETITORS
 from ..gamification import month_rankings
+from ..stats_detail import build_user_stats_detail
 
 router = APIRouter(prefix="/api", tags=["stats"])
 
@@ -86,13 +89,8 @@ def stats(current: User = Depends(get_current_user), db: Session = Depends(get_d
         total_users = total_competitors
 
     start = msk_today() - timedelta(days=29)
-    rows = (
-        db.query(DailyActivity)
-        .filter(DailyActivity.user_id == current.id, DailyActivity.day >= start)
-        .order_by(DailyActivity.day.asc())
-        .all()
-    )
-    activity = [DailyActivityPublic.model_validate(r) for r in rows]
+    detail = build_user_stats_detail(db, current, days=30)
+    activity = [DailyActivityPublic(**row) for row in detail["daily_earnings"]]
 
     return StatsResponse(
         total_pesos=current.pesos,
@@ -105,6 +103,9 @@ def stats(current: User = Depends(get_current_user), db: Session = Depends(get_d
         total_users=total_users,
         is_admin=bool(current.is_admin),
         activity=activity,
+        earnings_totals=EarningsTotalsPublic(**detail["earnings_totals"]),
+        lesson_history=[LessonEarningsPublic(**row) for row in detail["lesson_history"]],
+        daily_earnings=activity,
     )
 
 
@@ -121,6 +122,8 @@ def family_overview(current: User = Depends(get_current_user), db: Session = Dep
     members = []
     for u in db.query(User).order_by(User.is_admin.asc(), User.name.asc()).all():
         cefr, pct, lessons = _cefr_progress(db, u)
+        detail = build_user_stats_detail(db, u, days=30)
+        daily = [DailyActivityPublic(**row) for row in detail["daily_earnings"]]
         members.append(FamilyMemberStats(
             id=u.id,
             name=u.name,
@@ -134,6 +137,9 @@ def family_overview(current: User = Depends(get_current_user), db: Session = Dep
             cefr_level=cefr,
             level_progress_percent=pct,
             rank=None if u.is_admin else comp_rank.get(u.id),
+            earnings_totals=EarningsTotalsPublic(**detail["earnings_totals"]),
+            lesson_history=[LessonEarningsPublic(**row) for row in detail["lesson_history"]],
+            daily_earnings=daily,
         ))
 
     return FamilyOverviewResponse(

@@ -67,6 +67,24 @@ def test_locked_lesson_returns_403(client, auth_headers):
         assert r.status_code in (200, 403)
 
 
+def test_admin_can_open_all_lessons(client):
+    email = f"admin-{uuid.uuid4().hex[:8]}@example.com"
+    r = client.post(
+        "/api/auth/register",
+        json={"email": email, "password": "testpass123", "name": "Anatolii", "avatar": "👑"},
+    )
+    assert r.status_code == 201, r.text
+    headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    cur = client.get("/api/curriculum", headers=headers)
+    assert cur.status_code == 200
+    assert cur.json()["admin_all_lessons"] is True
+
+    locked = client.get("/api/lessons/w29-d1", headers=headers)
+    assert locked.status_code == 200
+    assert locked.json()["id"] == "w29-d1"
+
+
 def test_conjugate_endpoint_mexican_pronouns(client, auth_headers):
     r = client.post(
         "/api/tools/conjugate",

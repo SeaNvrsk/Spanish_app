@@ -2,7 +2,7 @@
 
 A1_BOOST_EXTRA: dict[int, list[tuple[str, str, str]]] = {
     1: [
-        ("¿Cómo amaneció?", "How did you wake up?", "Как проснулся?"),
+        ("¿Cómo amaneció?", "How are you this morning?", "Как ваше утро?"),
         ("hasta mañana", "see you tomorrow", "до завтра"),
         ("que le vaya bien", "have a good one (formal)", "всего хорошего"),
         ("un gusto", "a pleasure", "приятно"),
@@ -34,8 +34,8 @@ A1_BOOST_EXTRA: dict[int, list[tuple[str, str, str]]] = {
         ("seria", "serious (f)", "серьёзная"),
         ("joven", "young", "молодой"),
         ("mayor", "older/elder", "старший"),
-        ("listo", "ready/smart (m)", "готовый/умный"),
-        ("lista", "ready/smart (f)", "готовая/умная"),
+        ("listo", "ready (m)", "готовый"),
+        ("lista", "ready (f)", "готовая"),
         ("importante", "important", "важный"),
         ("posible", "possible", "возможный"),
         ("imposible", "impossible", "невозможный"),

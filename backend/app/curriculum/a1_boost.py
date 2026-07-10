@@ -85,8 +85,8 @@ A1_BOOST: dict[int, list[tuple[str, str, str]]] = {
     3: [
         ("ser", "to be (permanent)", "быть (ser)"),
         ("estar", "to be (temporary)", "быть (estar)"),
-        ("sois", "you are (Spain pl)", "вы есть (Исп.)"),
-        ("estáis", "you are (Spain pl, estar)", "вы находитесь (Исп.)"),
+        ("usted es", "you are (formal, ser)", "вы есть (вежл., ser)"),
+        ("usted está", "you are (formal, estar)", "вы находитесь (вежл., estar)"),
         ("bueno", "good (m)", "хороший"),
         ("buena", "good (f)", "хорошая"),
         ("malo", "bad (m)", "плохой"),

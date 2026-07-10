@@ -25,6 +25,18 @@ MEXICAN_INSTRUCTIONS = (
     "extra words — only pronounce exactly the text provided."
 )
 
+# Single words spelled like English that TTS often reads with English phonetics.
+SPANISH_COGNATE_WORDS = frozenset({
+    "formal", "informal", "natural", "normal", "popular", "familiar",
+    "similar", "digital", "personal", "social", "special", "general",
+    "local", "global", "original", "ideal", "legal", "final", "total",
+    "animal", "hospital", "doctor", "motor", "color", "director",
+    "actor", "error", "central", "visual", "manual", "moral", "oral",
+    "sexual", "cultural", "musical", "tropical",
+})
+
+TTS_CACHE_VERSION = "teacher-v14"
+
 ANGELICA_TTS_INSTRUCTIONS = (
     "You are Angélica, a university student from Mexico City (UNAM). "
     "Speak in clear, natural Mexican Spanish (es-MX) with chilango accent and seseo. "
@@ -52,6 +64,26 @@ def _normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def _is_cognate_word(text: str) -> bool:
+    """True for lone words that look identical in EN/ES and confuse TTS."""
+    clean = _normalize(text)
+    if not clean or " " in clean:
+        return False
+    token = re.sub(r"[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ¿¡]", "", clean).lower()
+    return token in SPANISH_COGNATE_WORDS
+
+
+def _tts_instructions(text: str, base: str) -> str:
+    if _is_cognate_word(text):
+        word = _normalize(text)
+        return (
+            f"{base} The input is ONE Spanish vocabulary word: «{word}». "
+            f"Pronounce it in Mexican Spanish (Spanish vowels, Spanish rhythm) — "
+            f"NOT with English pronunciation. Say only «{word}», nothing else."
+        )
+    return base
+
+
 def _cache_key(text: str, profile: str = "teacher") -> str:
     if profile == "angelica":
         raw = (
@@ -60,7 +92,7 @@ def _cache_key(text: str, profile: str = "teacher") -> str:
             f"angelica-v13|{_normalize(text)}"
         )
     else:
-        raw = f"{settings.openai_tts_model}|{settings.openai_tts_voice}|{_normalize(text)}"
+        raw = f"{settings.openai_tts_model}|{settings.openai_tts_voice}|{TTS_CACHE_VERSION}|{_normalize(text)}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -164,7 +196,7 @@ async def _speak_profile(text: str, request: Request, profile: str):
             return _audio_response(cached, key, "HIT")
 
         voice = settings.openai_angelica_tts_voice if profile == "angelica" else settings.openai_tts_voice
-        instructions = ANGELICA_TTS_INSTRUCTIONS if profile == "angelica" else MEXICAN_INSTRUCTIONS
+        instructions = _tts_instructions(text, ANGELICA_TTS_INSTRUCTIONS if profile == "angelica" else MEXICAN_INSTRUCTIONS)
 
         url = f"{settings.openai_base_url}/audio/speech"
         headers = {"Authorization": f"Bearer {settings.openai_api_key}"}

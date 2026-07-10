@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { useI18n, LANGUAGES, achievementLabel } from "../i18n";
 import { RulesModal } from "../components/RulesGate";
 import { Link } from "react-router-dom";
+import { EarningsSummary, LessonHistoryTable, DailyEarningsTable } from "../components/StatsPanels";
 
 const AVATARS = ["🦊", "🐱", "🐶", "🐼", "🦉", "🐸", "🦁", "🐨", "🐵", "🦄", "🐷", "🐯"];
 
@@ -20,7 +21,7 @@ function StatCard({ icon, label, value, color }) {
 function ActivityChart({ activity, t }) {
   const days = [];
   const map = {};
-  activity.forEach((a) => (map[a.day] = a.pesos));
+  activity.forEach((a) => (map[a.day] = a.pesos_total ?? a.pesos));
   const today = new Date();
   for (let i = 29; i >= 0; i--) {
     const d = new Date(today);
@@ -118,6 +119,20 @@ export default function Profile() {
           </div>
           <div className="mb-3 sm:mb-4">
             <ActivityChart activity={stats.activity} t={t} />
+          </div>
+          <div className="mb-3 rounded-2xl bg-white p-3 shadow-sm sm:mb-4 sm:p-4">
+            <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-slate-500">
+              {t("statsEarnings")}
+            </h2>
+            <EarningsSummary totals={stats.earnings_totals} t={t} />
+            <h3 className="mb-2 mt-4 text-xs font-extrabold uppercase tracking-wide text-slate-500">
+              {t("statsLessonHistory")}
+            </h3>
+            <LessonHistoryTable lessons={stats.lesson_history} t={t} lang={lang} />
+            <h3 className="mb-2 mt-4 text-xs font-extrabold uppercase tracking-wide text-slate-500">
+              {t("statsDailyEarnings")}
+            </h3>
+            <DailyEarningsTable days={stats.daily_earnings} t={t} />
           </div>
         </>
       )}

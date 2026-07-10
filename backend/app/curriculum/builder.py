@@ -34,6 +34,8 @@ REVIEW_WORDS_PER_DAY = 6
 WITHIN_WEEK_REVIEW = 3          # quiz-only review of earlier words this week (from day 3)
 QUIZ_REINFORCE_PASS = True      # second quiz round from day 4 when 8+ new words
 SPEAK_WORDS_MAX = 3             # pronunciation on key new words
+EXAM_QUESTIONS = 30
+EXAM_LISTEN_COUNT = 10
 # Realistic per-exercise time (includes reading, audio replays, thinking, feedback).
 SECONDS_PER_EXERCISE = {"flashcard": 30, "choice": 40, "listen": 45, "translate": 70, "cloze": 75, "speak": 60}
 THEORY_READ_SECONDS = 240
@@ -49,6 +51,55 @@ PRONOUN_DRILL_TEMPLATES = [
     ("¿___ te llamas?", "Cómo", "What's your name?", "Как тебя зовут?"),
     ("Me ___ Ana.", "llamo", "My name is Ana.", "Меня зовут Ана."),
 ]
+
+
+@lru_cache(maxsize=1)
+def _cloze_gloss_index() -> Dict[tuple, str]:
+    """Map (answer, en, ru) -> full Spanish sentence for repairing fragment SRS cards."""
+    index: Dict[tuple, str] = {}
+
+    def add(template: str, answer: str, en: str, ru: str):
+        filled = template.replace("___", answer)
+        index[(_norm(answer), (en or "").strip(), (ru or "").strip())] = filled
+
+    for wk in WEEKS:
+        for ch in wk.get("chunks", []):
+            add(ch["template"], ch["answer"], ch["en"], ch["ru"])
+    for template, answer, en, ru in PRONOUN_DRILL_TEMPLATES:
+        add(template, answer, en, ru)
+    return index
+
+
+def normalize_vocab_entry(es: str, en: str = "", ru: str = "") -> dict:
+    """Align Spanish text with its gloss (fixes legacy cloze cards that stored only the blank)."""
+    es = (es or "").strip()
+    en = (en or "").strip()
+    ru = (ru or "").strip()
+    if not es:
+        return {"es": es, "translations": {"en": en, "ru": ru}}
+
+    index = _cloze_gloss_index()
+    exact = index.get((_norm(es), en, ru))
+    if exact:
+        return {"es": exact, "translations": {"en": en, "ru": ru}}
+
+    if " " not in es:
+        for (ans, fen, fru), filled in index.items():
+            if ans == _norm(es) and (fen == en or fru == ru):
+                return {"es": filled, "translations": {"en": fen or en, "ru": fru or ru}}
+
+    return {"es": es, "translations": {"en": en, "ru": ru}}
+
+
+def repair_card_vocab(es: str, en: str = "", ru: str = "") -> dict:
+    """Normalized card fields for SRS (es/en/ru aligned)."""
+    n = normalize_vocab_entry(es, en, ru)
+    return {
+        "es": n["es"],
+        "en": n["translations"]["en"],
+        "ru": n["translations"]["ru"],
+    }
+
 
 LEVEL_MONTHS = {"A1": 3, "A2": 6, "B1": 12}
 LEVEL_MONTH_RANGE = {"A1": (1, 3), "A2": (4, 6), "B1": (7, 12)}
@@ -97,6 +148,83 @@ def _norm(text: str) -> str:
     """Lowercase and strip accents so 'días' and 'dias' compare equal."""
     text = unicodedata.normalize("NFD", (text or "").lower())
     return "".join(c for c in text if unicodedata.category(c) != "Mn")
+
+
+def _norm_gloss(text: str) -> str:
+    t = _norm(text)
+    t = re.sub(r"[¿?¡!.,;:\"'()]", " ", t)
+    return " ".join(t.split())
+
+
+def _en_sense(en: str) -> str:
+    """Collapse near-synonym English glosses (bye / goodbye) without merging unrelated senses."""
+    t = _norm(en)
+    t = re.sub(r"\([^)]*\)", " ", t)
+    t = re.sub(r"[¿?¡!.,;:\"'/]", " ", t)
+    t = " ".join(t.split())
+    if t in {"goodbye", "good bye", "bye", "bye bye", "so long"} or t.startswith("bye "):
+        return "goodbye"
+    return t
+
+
+def _same_meaning(a: dict, b: dict) -> bool:
+    """True when two vocab entries share the same RU gloss and compatible EN sense."""
+    ta, tb = a.get("translations") or {}, b.get("translations") or {}
+    ru_a, ru_b = _norm_gloss(ta.get("ru", "")), _norm_gloss(tb.get("ru", ""))
+    if not ru_a or not ru_b or ru_a != ru_b:
+        return False
+    en_a, en_b = _en_sense(ta.get("en", "")), _en_sense(tb.get("en", ""))
+    if en_a and en_b:
+        return en_a == en_b
+    return True
+
+
+@lru_cache
+def _all_program_vocab() -> tuple:
+    """Every unique vocab item in the program (weeks + A1 boost)."""
+    seen, pool = set(), []
+    for wk in WEEKS:
+        for raw in wk.get("vocab", []):
+            v = _vi(raw)
+            if v["es"] in seen:
+                continue
+            seen.add(v["es"])
+            pool.append(v)
+    for w in range(1, TOTAL_WEEKS + 1):
+        if w in A1_BOOST:
+            for raw in A1_BOOST[w] + A1_BOOST_EXTRA.get(w, []):
+                v = _vi(raw)
+                if v["es"] in seen:
+                    continue
+                seen.add(v["es"])
+                pool.append(v)
+    return tuple(pool)
+
+
+@lru_cache(maxsize=1)
+def _synonym_index() -> Dict[str, tuple]:
+    """Map (ru_gloss, en_sense) → Spanish synonyms. Built once, O(vocab)."""
+    by_key: Dict[str, set] = {}
+    for item in _all_program_vocab():
+        ta = item.get("translations") or {}
+        ru = _norm_gloss(ta.get("ru", ""))
+        if not ru:
+            continue
+        en = _en_sense(ta.get("en", "")) or "_"
+        key = f"{ru}|{en}"
+        by_key.setdefault(key, set()).add(item["es"])
+    return {k: tuple(sorted(v)) for k, v in by_key.items()}
+
+
+def _accepted_es_answers(v: dict) -> List[str]:
+    """O(1) synonym lookup via prebuilt gloss index (chao / Adiós → пока)."""
+    ta = v.get("translations") or {}
+    ru = _norm_gloss(ta.get("ru", ""))
+    if not ru:
+        return [v["es"]]
+    en = _en_sense(ta.get("en", "")) or "_"
+    hit = _synonym_index().get(f"{ru}|{en}")
+    return list(hit) if hit else [v["es"]]
 
 
 def _word_tokens(text: str) -> set:
@@ -187,7 +315,7 @@ def _cloze_exercise(ex_id, chunk):
     out = {
         "id": ex_id, "type": "cloze",
         "template": chunk["template"], "answer": chunk["answer"], "sentence": filled,
-        "es": chunk["answer"],
+        "es": filled,
         "translations": {"en": chunk["en"], "ru": chunk["ru"]},
         "audio": filled,
     }
@@ -208,10 +336,10 @@ def _speak_exercise(ex_id, v):
     return out
 
 
-def _quiz_exercise(rng, ex_id, v, pool, i):
+def _quiz_exercise(rng, ex_id, v, pool, i, force_type=None):
     """Build one quiz exercise (no flashcard), cycling through 4 types."""
     types = ["choice_es_to_native", "listen", "choice_native_to_es", "translate"]
-    ex_type = types[i % len(types)]
+    ex_type = force_type if force_type else types[i % len(types)]
     base = {"id": ex_id, "es": v["es"], "translations": v["translations"], "audio": v["es"]}
     if v.get("image_url"):
         base["image_url"] = v["image_url"]
@@ -248,6 +376,7 @@ def _quiz_exercise(rng, ex_id, v, pool, i):
         })
     else:
         base.update({"type": "translate", "direction": "native_to_es", "answer": v["es"]})
+    base["accepted_answers"] = _accepted_es_answers(v)
     return base
 
 
@@ -369,18 +498,49 @@ def _day_lesson(lid, week_meta, day_in_week, global_day, new_vocab, review_pool,
 
 
 def _exam_lesson(lid, week_meta, global_day, week_vocab, review_pool, distractor_pool, chunks):
-    """Weekly exam: mixed quiz + contextual cloze from the week & earlier words, bonus XP."""
+    """Weekly exam: 30 mixed questions — 10 listening + 20 choice/translate."""
     rng = random.Random(lid + "-exam")
-    pool = list(week_vocab)
-    if review_pool:
-        pool += rng.sample(review_pool, min(5, len(review_pool)))
-    rng.shuffle(pool)
-    pool = pool[:14] if len(pool) > 14 else pool
-    exercises = [_quiz_exercise(rng, f"{lid}-e{i}", v, distractor_pool + review_pool, i)
-                 for i, v in enumerate(pool)]
-    for i, ch in enumerate(chunks[:3]):
-        exercises.append(_cloze_exercise(f"{lid}-ez{i}", ch))
-    rng.shuffle(exercises)
+    pool: List[dict] = []
+    seen: set[str] = set()
+    for source in (week_vocab, review_pool or [], distractor_pool or []):
+        for v in source:
+            if v["es"] in seen:
+                continue
+            seen.add(v["es"])
+            pool.append(v)
+    if not pool:
+        pool = list(week_vocab) or list(review_pool or []) or list(distractor_pool or [])
+
+    target_questions = EXAM_QUESTIONS if pool else 0
+    word_picks: List[dict] = []
+    if pool:
+        while len(word_picks) < target_questions:
+            batch = list(pool)
+            rng.shuffle(batch)
+            word_picks.extend(batch)
+        word_picks = word_picks[:target_questions]
+
+    combined_pool = list({v["es"]: v for v in (distractor_pool or []) + (review_pool or []) + list(week_vocab)}.values())
+    if not combined_pool and pool:
+        combined_pool = list(pool)
+
+    exercises = []
+    if word_picks:
+        listen_count = min(EXAM_LISTEN_COUNT, len(word_picks))
+        listen_slots = set(rng.sample(range(len(word_picks)), listen_count))
+        other_types = ["choice_es_to_native", "choice_native_to_es", "translate"]
+        other_i = 0
+        for i, v in enumerate(word_picks):
+            if i in listen_slots:
+                ex = _quiz_exercise(rng, f"{lid}-e{i}", v, combined_pool, i, force_type="listen")
+            else:
+                ex = _quiz_exercise(
+                    rng, f"{lid}-e{i}", v, combined_pool, other_i,
+                    force_type=other_types[other_i % len(other_types)],
+                )
+                other_i += 1
+            exercises.append(ex)
+        rng.shuffle(exercises)
     return {
         "id": lid, "kind": "exam", "week": week_meta["week"], "day_in_week": DAYS_PER_WEEK,
         "day": global_day, "level": week_meta["level"], "icon": "📝",
@@ -563,15 +723,7 @@ def lesson_ids_for_level(level_id: str) -> List[str]:
 @lru_cache
 def all_vocab_pool() -> List[dict]:
     """Unique vocab items across the whole program (used as distractors)."""
-    seen, pool = set(), []
-    for wk in WEEKS:
-        for raw in wk["vocab"]:
-            v = _vi(raw)
-            if v["es"] in seen:
-                continue
-            seen.add(v["es"])
-            pool.append(v)
-    return pool
+    return list(_all_program_vocab())
 
 
 def build_quiz(vocab_items: List[dict], pool: List[dict], seed: str, allow_speak: bool = True) -> List[dict]:
