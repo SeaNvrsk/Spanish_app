@@ -1098,5 +1098,260 @@
     "file": "diferente.webp",
     "es": "diferente",
     "en": "different"
+  },
+  "la-mama": {
+    "file": "la-mama.webp",
+    "es": "la mamá",
+    "en": "mom"
+  },
+  "el-papa": {
+    "file": "el-papa.webp",
+    "es": "el papá",
+    "en": "dad"
+  },
+  "el-hermano": {
+    "file": "el-hermano.webp",
+    "es": "el hermano",
+    "en": "brother"
+  },
+  "la-hermana": {
+    "file": "la-hermana.webp",
+    "es": "la hermana",
+    "en": "sister"
+  },
+  "el-hijo": {
+    "file": "el-hijo.webp",
+    "es": "el hijo",
+    "en": "son"
+  },
+  "la-hija": {
+    "file": "la-hija.webp",
+    "es": "la hija",
+    "en": "daughter"
+  },
+  "el-abuelo": {
+    "file": "el-abuelo.webp",
+    "es": "el abuelo",
+    "en": "grandfather"
+  },
+  "la-abuela": {
+    "file": "la-abuela.webp",
+    "es": "la abuela",
+    "en": "grandmother"
+  },
+  "el-tio": {
+    "file": "el-tio.webp",
+    "es": "el tío",
+    "en": "uncle"
+  },
+  "la-tia": {
+    "file": "la-tia.webp",
+    "es": "la tía",
+    "en": "aunt"
+  },
+  "el-esposo": {
+    "file": "el-esposo.webp",
+    "es": "el esposo",
+    "en": "husband"
+  },
+  "la-esposa": {
+    "file": "la-esposa.webp",
+    "es": "la esposa",
+    "en": "wife"
+  },
+  "los-padres": {
+    "file": "los-padres.webp",
+    "es": "los padres",
+    "en": "parents"
+  },
+  "el-bebe": {
+    "file": "el-bebe.webp",
+    "es": "el bebé",
+    "en": "baby"
+  },
+  "mi": {
+    "file": "mi.webp",
+    "es": "mi",
+    "en": "my"
+  },
+  "su": {
+    "file": "su.webp",
+    "es": "su",
+    "en": "his/her/your"
+  },
+  "nuestro": {
+    "file": "nuestro.webp",
+    "es": "nuestro",
+    "en": "our"
+  },
+  "la-familia": {
+    "file": "la-familia.webp",
+    "es": "la familia",
+    "en": "family"
+  },
+  "el-nino": {
+    "file": "el-nino.webp",
+    "es": "el niño",
+    "en": "boy"
+  },
+  "la-nina": {
+    "file": "la-nina.webp",
+    "es": "la niña",
+    "en": "girl"
+  },
+  "grande": {
+    "file": "grande.webp",
+    "es": "grande",
+    "en": "big"
+  },
+  "pequeno": {
+    "file": "pequeno.webp",
+    "es": "pequeño",
+    "en": "small"
+  },
+  "el-padre": {
+    "file": "el-padre.webp",
+    "es": "el padre",
+    "en": "father"
+  },
+  "la-madre": {
+    "file": "la-madre.webp",
+    "es": "la madre",
+    "en": "mother"
+  },
+  "el-primo": {
+    "file": "el-primo.webp",
+    "es": "el primo",
+    "en": "cousin (m)"
+  },
+  "la-prima": {
+    "file": "la-prima.webp",
+    "es": "la prima",
+    "en": "cousin (f)"
+  },
+  "nuestra": {
+    "file": "nuestra.webp",
+    "es": "nuestra",
+    "en": "our (f)"
+  },
+  "cuantos-hermanos-tienes": {
+    "file": "cuantos-hermanos-tienes.webp",
+    "es": "¿Cuántos hermanos tienes?",
+    "en": "How many siblings?"
+  },
+  "mi-familia-es-grande": {
+    "file": "mi-familia-es-grande.webp",
+    "es": "Mi familia es grande.",
+    "en": "My family is big."
+  },
+  "es-mi-madre": {
+    "file": "es-mi-madre.webp",
+    "es": "Es mi madre.",
+    "en": "She's my mother."
+  },
+  "tengo-dos-hijos": {
+    "file": "tengo-dos-hijos.webp",
+    "es": "Tengo dos hijos.",
+    "en": "I have two children."
+  },
+  "tienes-hijos": {
+    "file": "tienes-hijos.webp",
+    "es": "¿Tienes hijos?",
+    "en": "Do you have children?"
+  },
+  "vivo-con-mi-familia": {
+    "file": "vivo-con-mi-familia.webp",
+    "es": "Vivo con mi familia.",
+    "en": "I live with my family."
+  },
+  "el-nieto": {
+    "file": "el-nieto.webp",
+    "es": "el nieto",
+    "en": "grandson"
+  },
+  "la-nieta": {
+    "file": "la-nieta.webp",
+    "es": "la nieta",
+    "en": "granddaughter"
+  },
+  "los-abuelos": {
+    "file": "los-abuelos.webp",
+    "es": "los abuelos",
+    "en": "grandparents"
+  },
+  "menor": {
+    "file": "menor.webp",
+    "es": "menor",
+    "en": "younger"
+  },
+  "solo": {
+    "file": "solo.webp",
+    "es": "solo",
+    "en": "only/alone"
+  },
+  "casado": {
+    "file": "casado.webp",
+    "es": "casado",
+    "en": "married (m)"
+  },
+  "casada": {
+    "file": "casada.webp",
+    "es": "casada",
+    "en": "married (f)"
+  },
+  "soltero": {
+    "file": "soltero.webp",
+    "es": "soltero",
+    "en": "single (m)"
+  },
+  "soltera": {
+    "file": "soltera.webp",
+    "es": "soltera",
+    "en": "single (f)"
+  },
+  "estas-casado": {
+    "file": "estas-casado.webp",
+    "es": "¿Estás casado?",
+    "en": "Are you married?"
+  },
+  "el-novio": {
+    "file": "el-novio.webp",
+    "es": "el novio",
+    "en": "boyfriend"
+  },
+  "la-novia": {
+    "file": "la-novia.webp",
+    "es": "la novia",
+    "en": "girlfriend"
+  },
+  "el-vecino": {
+    "file": "el-vecino.webp",
+    "es": "el vecino",
+    "en": "neighbor (m)"
+  },
+  "la-vecina": {
+    "file": "la-vecina.webp",
+    "es": "la vecina",
+    "en": "neighbor (f)"
+  },
+  "el-pariente": {
+    "file": "el-pariente.webp",
+    "es": "el pariente",
+    "en": "relative"
+  },
+  "la-gente": {
+    "file": "la-gente.webp",
+    "es": "la gente",
+    "en": "people"
+  },
+  "el-hombre": {
+    "file": "el-hombre.webp",
+    "es": "el hombre",
+    "en": "man"
+  },
+  "la-mujer": {
+    "file": "la-mujer.webp",
+    "es": "la mujer",
+    "en": "woman"
   }
 }
