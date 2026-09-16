@@ -9,8 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#0f766e" />
     <meta name="format-detection" content="telephone=no" />
-    <link rel="icon" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="./favicon.svg" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <title>Español para la Familia 🌮</title>
     <script>
       (function () {
@@ -30,17 +30,36 @@
         if (window.matchMedia("(orientation: portrait)").matches) {
           document.documentElement.classList.add("is-portrait");
         }
-        requestAnimationFrame(function () {
-          var layoutW = document.documentElement.clientWidth;
-          if (layoutW > targetW + 60) {
-            document.documentElement.style.zoom = String(Math.min(layoutW / targetW, 3));
-          }
-        });
+        // Do NOT set documentElement.style.zoom — it blanks the app on iOS Safari.
       })();
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot-fallback" style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-family:system-ui;background:#f8fafc">
+        <div style="font-size:2.5rem">🌮</div>
+        <p style="font-size:14px;font-weight:600;color:#64748b">Загрузка…</p>
+      </div>
+    </div>
+    <script>
+      // If the ES module never runs (common mobile Safari failure), leave a visible recovery UI.
+      setTimeout(function () {
+        var root = document.getElementById("root");
+        if (
+          !root ||
+          root.getAttribute("data-app-booted") === "1" ||
+          window.__espanolLoaderActive
+        )
+          return;
+        root.innerHTML =
+          '<div style="min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center;font-family:system-ui;background:#f8fafc">' +
+          '<div style="font-size:2.5rem">⚠️</div>' +
+          '<p style="font-weight:800;color:#0f766e;font-size:18px">Приложение не загрузилось</p>' +
+          '<p style="font-size:14px;color:#64748b;max-width:280px">Плохая сеть. Нажмите обновить ещё раз или откройте с Wi‑Fi</p>' +
+          '<button onclick="location.reload()" style="margin-top:8px;padding:12px 20px;border:0;border-radius:12px;background:#0f766e;color:#fff;font-weight:800">Обновить</button>' +
+          "</div>";
+      }, 15000);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "lint": "oxlint",
+    "build": "export VITE_BASE_PATH=\"${VITE_BASE_PATH:-$(sed 's|/*$|/|' ../.public_path)}\" && echo \"VITE_BASE_PATH=$VITE_BASE_PATH\" && vite build && node scripts/split-classic-bundle.mjs",
+    "test": "node --test scripts/test-tts-playback.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -34,7 +34,7 @@ class User(Base):
     current_streak = Column(Integer, default=0, nullable=False)
     longest_streak = Column(Integer, default=0, nullable=False)
     last_active_date = Column(Date, nullable=True)
-    # Pesos carried over from a previous month (winner's optional roll-over).
+    # Piggy bank: monthly prize-place shares accumulate here until the quarterly order.
     carryover_pesos = Column(Integer, default=0, nullable=False)
     # Admin observes all stats but is excluded from family rankings / peso prizes.
     is_admin = Column(Boolean, default=False, nullable=False)
@@ -111,5 +111,27 @@ class ChatMessage(Base):
     role = Column(String, nullable=False)  # user | assistant
     content = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    user = relationship("User")
+
+
+class MonthPrizeCredit(Base):
+    """Place-share pesos credited to the piggy bank after a month closes.
+
+    Only the prize share (1st 100% / 2nd 75% / 3rd 50%, ties split) goes into
+    carryover — not the full monthly total. Mercado Libre orders are quarterly.
+    """
+
+    __tablename__ = "month_prize_credits"
+    __table_args__ = (UniqueConstraint("user_id", "month", name="uq_user_prize_month"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    month = Column(String, nullable=False, index=True)  # YYYY-MM
+    rank = Column(Integer, nullable=False)
+    month_pesos = Column(Integer, nullable=False, default=0)
+    spend_share = Column(Float, nullable=False, default=0.0)
+    credited = Column(Integer, nullable=False, default=0)  # whole pesos added to carryover
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User")

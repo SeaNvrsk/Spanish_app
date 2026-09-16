@@ -208,7 +208,7 @@ export function ConjugatorPanel({ onClose }) {
           <div className="bg-indigo-50 px-4 py-2.5">
             <div className="flex items-center justify-center gap-2">
               <p className="truncate text-sm font-extrabold text-indigo-800">{result.infinitive}</p>
-              <SpeakButton text={result.infinitive} small />
+              <SpeakButton text={result.infinitive} lemma={result.infinitive} small />
             </div>
             <p className="text-center text-[11px] font-semibold text-indigo-600">
               {t(TENSE_KEYS[result.tense] || "tensePresent")}
@@ -222,7 +222,7 @@ export function ConjugatorPanel({ onClose }) {
                   <td className="px-2 py-2 sm:px-4">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-extrabold text-slate-800">{row.form}</span>
-                      <SpeakButton text={row.form} small />
+                      <SpeakButton text={row.form} lemma={result.infinitive} small />
                     </div>
                   </td>
                 </tr>

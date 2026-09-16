@@ -120,12 +120,26 @@ _here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _dist = os.path.abspath(os.path.join(_here, "..", "frontend", "dist"))
 
 if os.path.isdir(_dist):
-    app.mount("/assets", StaticFiles(directory=os.path.join(_dist, "assets")), name="assets")
+    _assets_dir = os.path.join(_dist, "assets")
+    app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+    # Hidden nginx prefix: the browser loader requests /{PUBLIC_PATH}/assets/...
+    # If nginx alias is skipped (direct gunicorn, misconfig), still serve the JS parts.
+    _public_path = os.environ.get("PUBLIC_PATH", "").strip().strip("/")
+    if _public_path:
+        app.mount(
+            f"/{_public_path}/assets",
+            StaticFiles(directory=_assets_dir),
+            name="assets_public",
+        )
 
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     def spa(full_path: str):
         # Let the SPA router handle client-side routes.
         candidate = os.path.join(_dist, full_path)
         if full_path and os.path.isfile(candidate):
             return FileResponse(candidate)
-        return FileResponse(os.path.join(_dist, "index.html"))
+        # Never cache the shell HTML — iOS Safari otherwise keeps a stale JS bundle hash.
+        return FileResponse(
+            os.path.join(_dist, "index.html"),
+            headers={"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"},
+        )

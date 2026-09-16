@@ -1,5 +1,6 @@
 """Family tools: RU→Mexican Spanish translator (AI) and verb conjugator."""
 
+import asyncio
 import hashlib
 import json
 import os
@@ -22,6 +23,9 @@ _CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file
 _EXPLAIN_CACHE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "explain_cache")
 os.makedirs(_CACHE_DIR, exist_ok=True)
 os.makedirs(_EXPLAIN_CACHE_DIR, exist_ok=True)
+
+# Keep AI explain under this so slow RU mobile clients don't hit axios aborts.
+_EXPLAIN_AI_TIMEOUT_S = 12.0
 
 
 class TranslateRequest(BaseModel):
@@ -202,7 +206,7 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
         "max_tokens": 650,
     }
 
-    async with httpx.AsyncClient(timeout=45) as client:
+    async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.post(url, headers=headers, json=body)
     if resp.status_code != 200:
         raise HTTPException(status_code=502, detail="Explanation service error")
@@ -227,6 +231,28 @@ async def _explain_ai(spanish: str, context_en: str, context_ru: str) -> dict:
         raise HTTPException(status_code=502, detail="Empty explanation")
     if not examples:
         examples.append({"es": spanish, "ru": ""})
+    return {
+        "explanation_ru": explanation_ru,
+        "examples": examples,
+        "example_es": examples[0]["es"],
+    }
+
+
+def _local_explain(spanish: str, context_en: str, context_ru: str) -> dict:
+    """Instant offline fallback when OpenAI is slow/unavailable."""
+    gloss = (context_ru or context_en or "").strip()
+    if gloss:
+        explanation_ru = f"«{spanish}» — {gloss}."
+        examples = [
+            {"es": spanish, "ru": gloss},
+            {"es": f"En México se usa «{spanish}».", "ru": f"В Мексике говорят «{spanish}» ({gloss})."},
+        ]
+    else:
+        explanation_ru = f"Слово или фраза: «{spanish}»."
+        examples = [
+            {"es": spanish, "ru": ""},
+            {"es": f"Repite: {spanish}.", "ru": f"Повтори: {spanish}."},
+        ]
     return {
         "explanation_ru": explanation_ru,
         "examples": examples,
@@ -324,6 +350,17 @@ async def explain_spanish(body: ExplainRequest, _: User = Depends(get_current_us
         norm = _normalize_explain_cached(cached, spanish)
         return _explain_payload(spanish, norm, cached=True)
 
-    result = await _explain_ai(spanish, body.context_en.strip(), body.context_ru.strip())
-    _store_explain(key, result)
-    return _explain_payload(spanish, result, cached=False)
+    try:
+        result = await asyncio.wait_for(
+            _explain_ai(spanish, body.context_en.strip(), body.context_ru.strip()),
+            timeout=_EXPLAIN_AI_TIMEOUT_S,
+        )
+        _store_explain(key, result)
+        return _explain_payload(spanish, result, cached=False)
+    except Exception:
+        # Never fail the lesson UI on slow links / OpenAI blips — show gloss instantly.
+        return _explain_payload(
+            spanish,
+            _local_explain(spanish, body.context_en.strip(), body.context_ru.strip()),
+            cached=False,
+        )

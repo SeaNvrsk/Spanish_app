@@ -34,9 +34,13 @@ export function ensureMobileViewport() {
     requestAnimationFrame(() => {
       const layoutW = root.clientWidth || window.innerWidth;
       if (layoutW > targetW + 60) {
-        const zoom = layoutW / targetW;
-        root.style.zoom = String(Math.min(zoom, 3));
-        root.dataset.viewportZoom = "1";
+        // CSS zoom blanks / freezes React on iOS Safari — only use on Android.
+        const isIOS = /iPhone|iPad|iPod/i.test(ua);
+        if (!isIOS) {
+          const zoom = layoutW / targetW;
+          root.style.zoom = String(Math.min(zoom, 3));
+          root.dataset.viewportZoom = "1";
+        }
       } else {
         root.style.zoom = portrait ? "1" : "";
         delete root.dataset.viewportZoom;

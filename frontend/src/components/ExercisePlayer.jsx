@@ -1,25 +1,35 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import api from "../api";
 import { useI18n, nativeGloss } from "../i18n";
-import { useSpeak } from "../tts";
+import { stopPlayback, unlockAudio, useSpeak, isSpeakableSpanish } from "../tts";
 import { useKeyboardInset } from "../useKeyboardInset";
 import { WordImage } from "./WordImage";
 import { normalize, isChoiceCorrect, isSynonymOption, isTranslateCorrect } from "../exerciseEval";
 
 export { normalize };
 
-export function SpeakButton({ text, big, small }) {
+export function SpeakButton({ text, lemma = "", big, small, autoPrefetch = true }) {
   const { t } = useI18n();
-  const { speak, speaking } = useSpeak();
+  const { speak, speaking, prefetch } = useSpeak();
+  const speakable = isSpeakableSpanish(text);
   const sizeClass = big
     ? "h-20 w-20 text-4xl"
     : small
       ? "h-9 w-9 shrink-0 text-base shadow-md shadow-teal-500/30"
       : "h-11 w-11 text-xl";
+
+  useEffect(() => {
+    if (autoPrefetch && speakable && text) prefetch(text, lemma);
+  }, [autoPrefetch, speakable, text, lemma, prefetch]);
+
+  if (!speakable) return null;
+
   return (
     <button
       type="button"
-      onClick={() => speak(text)}
+      // Unlock before click/fetch so iOS still allows playback after await.
+      onPointerDown={unlockAudio}
+      onClick={() => speak(text, lemma)}
       className={`flex items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-500/40 transition active:scale-90 ${sizeClass} ${
         speaking ? "animate-pulse" : ""
       }`}
@@ -86,7 +96,7 @@ function SpeakExercise({ ex, onResult }) {
     <div className="flex flex-col items-center gap-5">
       <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-6 py-5">
         <span className="text-3xl font-black text-slate-800">{ex.es}</span>
-        <SpeakButton text={ex.audio} />
+        <SpeakButton key={`${ex.id}-speak`} text={ex.audio} lemma={ex.lemma} />
       </div>
       <p className="text-sm font-semibold text-slate-500">{nativeGloss(ex.translations, lang)}</p>
 
@@ -165,9 +175,9 @@ function SpeakExercise({ ex, onResult }) {
   );
 }
 
-export default function ExercisePlayer({ exercises, kind, onFinish }) {
+export default function ExercisePlayer({ exercises, kind, onFinish, onClose }) {
   const { t, lang } = useI18n();
-  const { speak } = useSpeak();
+  const { prefetch } = useSpeak();
 
   const [idx, setIdx] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -179,7 +189,6 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   const [infoData, setInfoData] = useState(null);
   const [infoError, setInfoError] = useState(false);
   const resultsRef = useRef([]);
-  const autoSpoke = useRef(null);
   const finishedRef = useRef(false);
   const scrollRef = useRef(null);
   const footerRef = useRef(null);
@@ -202,12 +211,11 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   }, [ex?.id, ex?.type]);
 
   useEffect(() => {
-    if (ex && ex.type === "listen" && autoSpoke.current !== ex.id) {
-      autoSpoke.current = ex.id;
-      const tmo = setTimeout(() => speak(ex.audio), 350);
-      return () => clearTimeout(tmo);
+    stopPlayback();
+    if (ex && ex.type === "listen" && ex.audio) {
+      prefetch(ex.audio, ex.lemma || "");
     }
-  }, [ex, speak]);
+  }, [ex?.id, ex?.type, ex?.audio, prefetch]);
 
   useEffect(() => {
     setInfoData(null);
@@ -216,6 +224,8 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   }, [ex?.id]);
 
   useEffect(() => {
+    // Review: no AI explain (slow on RU links). Lessons: load with long timeout + local UI fallback.
+    if (kind === "review") return undefined;
     if (status === "idle" || !spanishTarget || !isScored) return undefined;
     let cancelled = false;
     setInfoLoading(true);
@@ -223,14 +233,38 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
     setInfoData(null);
     (async () => {
       try {
-        const { data } = await api.post("/tools/explain", {
-          spanish: spanishTarget,
-          context_en: glossEn,
-          context_ru: glossRu,
-        });
-        if (!cancelled) setInfoData(data);
+        const { data } = await api.post(
+          "/tools/explain",
+          {
+            spanish: spanishTarget,
+            context_en: glossEn,
+            context_ru: glossRu,
+          },
+          { timeout: 20000 }
+        );
+        if (!cancelled) {
+          setInfoData(data);
+          setInfoError(false);
+        }
       } catch {
-        if (!cancelled) setInfoError(true);
+        // Local gloss fallback — never leave a red error if we already know the meaning.
+        if (!cancelled) {
+          if (glossRu || glossEn) {
+            setInfoData({
+              explanation_ru: `«${spanishTarget}» — ${glossRu || glossEn}.`,
+              examples: [
+                { es: spanishTarget, ru: glossRu || glossEn },
+                {
+                  es: `En México se usa «${spanishTarget}».`,
+                  ru: glossRu || glossEn,
+                },
+              ],
+            });
+            setInfoError(false);
+          } else {
+            setInfoError(true);
+          }
+        }
       } finally {
         if (!cancelled) setInfoLoading(false);
       }
@@ -238,7 +272,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
     return () => {
       cancelled = true;
     };
-  }, [status, spanishTarget, glossEn, glossRu, isScored, ex?.id]);
+  }, [status, spanishTarget, glossEn, glossRu, isScored, ex?.id, kind]);
 
   useEffect(() => {
     const el = footerRef.current;
@@ -269,7 +303,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
   const finish = () => {
     if (finishedRef.current) return;
     finishedRef.current = true;
-    const score = scoredTotal > 0 ? Math.round((correctCount / scoredTotal) * 100) : 100;
+    const score = scoredTotal > 0 ? Math.round((correctCount / scoredTotal) * 100) : 0;
     onFinish(resultsRef.current, score);
   };
 
@@ -288,7 +322,8 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
     : infoData?.example_es
       ? [{ es: infoData.example_es, ru: "" }]
       : [];
-  const infoPending = status !== "idle" && spanishTarget && isScored && infoLoading;
+  // Never block Continue on explain/network — Rostelecom can stall OpenAI explain for 30–60s.
+  const infoPending = false;
 
   const evaluate = () => {
     let ok = false;
@@ -349,7 +384,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
     <div className="relative flex h-full min-h-dvh flex-col overflow-hidden bg-white">
       <div className="flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
         <button
-          onClick={finish}
+          onClick={onClose || finish}
           className="touch-target flex shrink-0 items-center justify-center rounded-full text-xl text-slate-400 active:bg-slate-100"
           aria-label="Close"
         >
@@ -378,15 +413,16 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
         {ex.type === "flashcard" && (
           <div className="flex flex-col items-center gap-5 rounded-3xl bg-teal-50 py-8 animate-pop sm:py-10">
             {ex.image_url && <WordImage url={ex.image_url} alt={ex.es} />}
-            <SpeakButton text={ex.audio} big />
+            <SpeakButton key={`${ex.id}-fc`} text={ex.audio} lemma={ex.lemma} big />
             <div className="text-4xl font-black text-slate-800">{ex.es}</div>
             <div className="text-lg font-semibold text-teal-700">{nativeGloss(ex.translations, lang)}</div>
           </div>
         )}
 
         {ex.type === "listen" && (
-          <div className="mb-6 flex justify-center">
-            <SpeakButton text={ex.audio} big />
+          <div className="mb-6 flex flex-col items-center gap-3">
+            <SpeakButton key={`${ex.id}-listen`} text={ex.audio} lemma={ex.lemma} big />
+            <p className="text-center text-sm font-semibold text-slate-500">{t("listenTapHint")}</p>
           </div>
         )}
 
@@ -395,7 +431,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
             {ex.image_url && <WordImage url={ex.image_url} alt={ex.es} className="max-h-36" />}
             <div className="flex items-center justify-center gap-3">
               <span className="text-3xl font-black text-slate-800">{ex.es}</span>
-              <SpeakButton text={ex.audio} />
+              <SpeakButton key={`${ex.id}-choice`} text={ex.audio} lemma={ex.lemma} />
             </div>
           </div>
         )}
@@ -449,7 +485,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
                 {status !== "idle" ? ex.answer : typed || "?"}
               </span>
               <span>{clozeParts[1]}</span>
-              <SpeakButton text={ex.audio} />
+              <SpeakButton key={`${ex.id}-cloze`} text={ex.audio} lemma={ex.lemma} />
             </div>
           </>
         )}
@@ -488,7 +524,15 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
                   )}
                 </p>
               )}
-              {spanishTarget && isScored && (
+              {spanishTarget && isScored && kind === "review" && (
+                <div className="mt-3 rounded-xl border border-teal-100 bg-white p-3 text-left shadow-sm">
+                  <p className="text-base font-bold text-teal-900">{spanishTarget}</p>
+                  {(glossRu || glossEn) && (
+                    <p className="mt-1 text-sm font-medium text-slate-600">{glossRu || glossEn}</p>
+                  )}
+                </div>
+              )}
+              {spanishTarget && isScored && kind !== "review" && (
                 <div className="mt-3 rounded-xl border border-teal-100 bg-white p-3 text-left shadow-sm">
                   {infoLoading && <p className="text-sm font-semibold text-slate-500">{t("infoLoading")}</p>}
                   {infoError && !infoLoading && (
@@ -504,7 +548,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish }) {
                           </p>
                           <div className="mt-1 flex items-start gap-2">
                             <p className="flex-1 text-base font-semibold italic text-teal-900">{item.es}</p>
-                            <SpeakButton text={item.es} small />
+                            <SpeakButton key={`${ex.id}-ex-${i}`} text={item.es} small />
                           </div>
                           {item.ru && (
                             <p className="mt-1 text-sm font-medium text-slate-600">{item.ru}</p>

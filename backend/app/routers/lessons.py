@@ -9,6 +9,7 @@ from ..deps import get_current_user
 from ..models import User, LessonProgress
 from ..curriculum import get_curriculum, get_lesson, get_all_lessons
 from ..tip_service import resolve_lesson_tip
+from ..vocab_images import refresh_images
 from ..schedule import (
     program_start,
     program_day_for_date,
@@ -121,6 +122,9 @@ async def lesson_detail(lesson_id: str, current: User = Depends(get_current_user
         raise HTTPException(status_code=404, detail="Lesson not found")
     _assert_lesson_unlocked(lesson, current)
     out = copy.deepcopy(lesson)
+    # Image files can appear after process start; re-attach so Unsplash/AI
+    # downloads show without requiring a service restart.
+    refresh_images(out)
     if out.get("theory"):
         tip = await resolve_lesson_tip(out)
         if tip:

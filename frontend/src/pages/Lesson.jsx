@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api";
 import { useI18n } from "../i18n";
@@ -16,12 +16,18 @@ export default function Lesson() {
   const [finished, setFinished] = useState(null);
   const [showTheory, setShowTheory] = useState(false);
   const [loadError, setLoadError] = useState(null);
+  const [saveError, setSaveError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const pendingFinish = useRef(null);
 
   useEffect(() => {
     setLesson(null);
     setLoadError(null);
     setFinished(null);
     setShowTheory(false);
+    setSaveError(false);
+    setSaving(false);
+    pendingFinish.current = null;
     api
       .get(`/lessons/${lessonId}`)
       .then(({ data }) => {
@@ -40,6 +46,26 @@ export default function Lesson() {
         }
       });
   }, [lessonId]);
+
+  const submitComplete = async (score) => {
+    setSaving(true);
+    setSaveError(false);
+    try {
+      const { data } = await api.post(`/lessons/${lessonId}/complete`, {
+        lesson_id: lessonId,
+        score,
+      });
+      setFinished({ ...data, score });
+      pendingFinish.current = null;
+      refresh();
+    } catch {
+      // Do not pretend the award succeeded — a false $0 screen looked like
+      // catch-up lessons pay nothing when the request simply failed.
+      setSaveError(true);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loadError?.locked) {
     return (
@@ -79,26 +105,47 @@ export default function Lesson() {
     // Feed practiced words into the spaced-repetition scheduler first, then
     // mark the lesson complete. Sequential (not fire-and-forget) so the two
     // requests don't race each other while creating the same review cards.
+    pendingFinish.current = { results, score };
     if (results.length) {
       await api.post("/review/grade", { items: results, award_pesos: false }).catch(() => {});
     }
-    try {
-      const { data } = await api.post(`/lessons/${lessonId}/complete`, { lesson_id: lessonId, score });
-      setFinished({ ...data, score });
-      refresh();
-    } catch {
-      setFinished({ pesos_earned: 0, score });
-    }
+    await submitComplete(score);
   };
 
   // ---------- Theory screen ----------
-  if (showTheory && lesson.theory && !finished) {
+  if (showTheory && lesson.theory && !finished && !saveError) {
     return (
       <TheoryScreen
         lesson={lesson}
         onClose={() => navigate("/")}
         onStart={() => setShowTheory(false)}
       />
+    );
+  }
+
+  // ---------- Save failure (do not show a fake $0 award) ----------
+  if (saveError && !finished) {
+    const score = pendingFinish.current?.score ?? 0;
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 px-5 py-8 text-center sm:px-6">
+        <div className="text-5xl">⚠️</div>
+        <h1 className="mt-4 text-xl font-extrabold text-slate-800">{t("loadError")}</h1>
+        <p className="mt-3 max-w-sm text-sm font-semibold text-slate-600">{t("lessonSaveError")}</p>
+        <p className="mt-2 text-sm font-bold text-slate-500">{score}%</p>
+        <button
+          onClick={() => submitComplete(score)}
+          disabled={saving}
+          className="mt-8 w-full max-w-xs rounded-xl bg-teal-600 py-4 font-extrabold text-white shadow-lg active:scale-95 disabled:bg-slate-300 sm:mt-10 sm:py-3.5"
+        >
+          {saving ? "…" : t("lessonSaveRetry")}
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="mt-3 w-full max-w-xs rounded-xl border-2 border-slate-200 py-3 font-bold text-slate-600 active:scale-95"
+        >
+          {t("backToLessons")}
+        </button>
+      </div>
     );
   }
 
@@ -131,5 +178,12 @@ export default function Lesson() {
     );
   }
 
-  return <ExercisePlayer exercises={lesson.exercises} kind={lesson.kind} onFinish={handleFinish} />;
+  return (
+    <ExercisePlayer
+      exercises={lesson.exercises}
+      kind={lesson.kind}
+      onFinish={handleFinish}
+      onClose={() => navigate("/")}
+    />
+  );
 }

@@ -8,7 +8,31 @@ export default defineConfig(({ mode }) => {
   const base = env.VITE_BASE_PATH || '/'
   return {
     base,
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      {
+        name: 'ios-safe-html',
+        transformIndexHtml(html) {
+          // crossorigin on module scripts can block eval on some mobile Safari paths
+          // when ACAO headers are missing/stripped.
+          return html.replace(/\s+crossorigin(?:="[^"]*")?/g, '')
+        },
+      },
+    ],
+    build: {
+      modulePreload: false,
+      rollupOptions: {
+        output: {
+          // One classic bundle avoids Safari's fragile module/blob/importmap path.
+          // The post-build script transports it in sub-48KiB pieces.
+          format: 'iife',
+          inlineDynamicImports: true,
+          entryFileNames: 'assets/app.js',
+        },
+      },
+      chunkSizeWarningLimit: 1200,
+    },
     server: {
       proxy: {
         '/api': {

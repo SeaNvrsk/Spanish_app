@@ -28,6 +28,8 @@ export default function Leaderboard() {
 
   const isAdmin = user?.is_admin;
   const me = rewards?.me;
+  const banks = rewards?.piggy_banks || [];
+  const quarter = rewards?.quarter;
 
   return (
     <div className="px-4 py-4">
@@ -38,7 +40,6 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Admin: full family dashboard */}
       {isAdmin && overview && overview.members?.length > 0 && (
         <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-lg font-extrabold text-slate-800">📊 {t("familyOverview")}</h2>
@@ -51,7 +52,39 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* Monthly pesos challenge — competitors only */}
+      {rewards && banks.length > 0 && (
+        <div className="mb-5 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold text-slate-800">🏦 {t("piggyBank")}</h2>
+              <p className="text-xs text-slate-500">{t("piggyBankSub")}</p>
+            </div>
+            {quarter && (
+              <div className="rounded-xl bg-amber-50 px-3 py-2 text-right">
+                <p className="text-[10px] font-bold uppercase text-amber-700">{t("quarterOrderNote")}</p>
+                <p className="text-xs font-extrabold text-amber-900">{quarter.label}</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 space-y-2">
+            {banks.map((b) => (
+              <div
+                key={b.id}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 ${
+                  b.is_me ? "bg-amber-50" : "bg-slate-50"
+                }`}
+              >
+                <span className="text-2xl">{b.avatar}</span>
+                <p className="flex-1 font-extrabold text-slate-800">
+                  {b.name} {b.is_me && <span className="text-[10px] font-bold text-amber-700">({t("you")})</span>}
+                </p>
+                <p className="text-lg font-black text-amber-600">${b.piggy_bank}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {rewards && (
         <div className="mb-5 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 p-4 text-white shadow-lg">
           <div className="flex items-center justify-between">
@@ -105,7 +138,6 @@ export default function Leaderboard() {
         </div>
       )}
 
-      {/* All-time peso ranking — competitors only */}
       <h2 className="mb-2 px-1 text-sm font-extrabold uppercase tracking-wide text-slate-500">
         {t("allTimePesos")}
       </h2>

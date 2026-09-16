@@ -6,27 +6,29 @@ import { useI18n, localized } from "../i18n";
 
 function DayNode({ day, state, onClick }) {
   const base =
-    "relative flex aspect-square w-full items-center justify-center rounded-xl text-sm font-extrabold shadow-sm transition active:scale-90 sm:h-12 sm:w-12 sm:rounded-2xl";
+    "relative flex aspect-square w-full items-center justify-center rounded-xl text-xs sm:text-sm font-extrabold shadow-sm transition active:scale-90 sm:h-12 sm:w-12 sm:rounded-2xl";
   let cls = "bg-slate-200 text-slate-400";
   let label = day.day_in_week;
   if (day.kind === "exam") label = "📝";
   if (day.kind === "capstone") label = "🎓";
 
-  if (state === "completed") {
-    cls = day.kind === "lesson" ? "bg-amber-400 text-white" : "bg-purple-500 text-white";
-    if (day.kind === "lesson") label = "💰";
-  } else if (state === "today") {
+  if (day.completed) {
+    if (day.best_score >= 100) {
+      // 100% completed -> Green
+      cls = "bg-emerald-500 text-white shadow-md shadow-emerald-500/20";
+      if (day.kind === "lesson") label = "100%";
+    } else {
+      // Completed with errors (<100%) -> Yellow
+      cls = "bg-amber-400 text-slate-900 shadow-md shadow-amber-400/20";
+      if (day.kind === "lesson") label = `${day.best_score}%`;
+    }
+  } else if (state !== "locked") {
+    // Uncompleted (Available / Today) -> Red
     cls =
-      day.kind === "lesson"
-        ? "bg-teal-500 text-white ring-4 ring-teal-200"
-        : "bg-purple-500 text-white ring-4 ring-purple-200";
-    if (day.kind === "lesson") label = "▶";
-  } else if (state === "available") {
-    cls =
-      day.kind === "lesson"
-        ? "bg-emerald-100 text-emerald-700 ring-2 ring-emerald-300"
-        : "bg-purple-100 text-purple-700 ring-2 ring-purple-300";
-    if (day.kind === "lesson") label = "↩";
+      state === "today"
+        ? "bg-rose-500 text-white ring-4 ring-rose-200 shadow-md shadow-rose-500/30"
+        : "bg-rose-500 text-white shadow-md shadow-rose-500/20";
+    if (day.kind === "lesson" && state === "today") label = "▶";
   }
 
   return (
@@ -34,9 +36,15 @@ function DayNode({ day, state, onClick }) {
       disabled={state === "locked"}
       onClick={onClick}
       className={`${base} ${cls}`}
-      title={state === "locked" && day.unlock_date ? day.unlock_date : `Day ${day.day}`}
+      title={
+        state === "locked" && day.unlock_date
+          ? `Unlocks on ${day.unlock_date}`
+          : day.completed
+            ? `${day.title} — ${day.best_score}%`
+            : `${day.title}`
+      }
     >
-      {label}
+      <span>{label}</span>
       {day.has_theory && state !== "locked" && (
         <span className="absolute -right-1 -top-1 text-[10px]">📘</span>
       )}

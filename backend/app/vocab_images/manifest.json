@@ -265,9 +265,10 @@
     "en": "hey"
   },
   "mira": {
-    "file": "mira.webp",
+    "file": "mirar.webp",
     "es": "mira",
-    "en": "look"
+    "en": "look",
+    "alias_of": "mirar"
   },
   "mande": {
     "file": "mande.webp",
@@ -637,12 +638,12 @@
   "un": {
     "file": "un.webp",
     "es": "un",
-    "en": "a/an (m)"
+    "en": "a (m)"
   },
   "una": {
     "file": "una.webp",
     "es": "una",
-    "en": "a/an (f)"
+    "en": "a (f)"
   },
   "unos": {
     "file": "unos.webp",
@@ -735,54 +736,64 @@
     "en": "quantity"
   },
   "soy": {
-    "file": "soy.webp",
+    "file": "ser.webp",
     "es": "soy",
-    "en": "I am (ser)"
+    "en": "I am (ser)",
+    "alias_of": "ser"
   },
   "eres": {
-    "file": "eres.webp",
+    "file": "ser.webp",
     "es": "eres",
-    "en": "you are"
+    "en": "you are",
+    "alias_of": "ser"
   },
   "es": {
-    "file": "es.webp",
+    "file": "ser.webp",
     "es": "es",
-    "en": "he/she is"
+    "en": "he/she is",
+    "alias_of": "ser"
   },
   "somos": {
-    "file": "somos.webp",
+    "file": "ser.webp",
     "es": "somos",
-    "en": "we are"
+    "en": "we are",
+    "alias_of": "ser"
   },
   "son": {
-    "file": "son.webp",
+    "file": "ser.webp",
     "es": "son",
-    "en": "they are"
+    "en": "they are",
+    "alias_of": "ser"
   },
   "estoy": {
-    "file": "estoy.webp",
+    "file": "estar.webp",
     "es": "estoy",
-    "en": "I am (estar)"
+    "en": "I am (estar)",
+    "alias_of": "estar"
   },
   "estas": {
-    "file": "estas.webp",
+    "file": "estar.webp",
     "es": "estás",
-    "en": "you are"
+    "en": "you are",
+    "alias_of": "estar"
   },
   "esta": {
-    "file": "esta.webp",
+    "file": "estar.webp",
     "es": "está",
-    "en": "he/she is"
+    "en": "he/she is",
+    "alias_of": "estar"
   },
   "estamos": {
-    "file": "estamos.webp",
+    "file": "estar.webp",
     "es": "estamos",
-    "en": "we are"
+    "en": "we are",
+    "alias_of": "estar"
   },
   "estan": {
-    "file": "estan.webp",
+    "file": "estar.webp",
     "es": "están",
-    "en": "they are"
+    "en": "they are",
+    "alias_of": "estar"
   },
   "aqui": {
     "file": "aqui.webp",
@@ -1353,5 +1364,351 @@
     "file": "la-mujer.webp",
     "es": "la mujer",
     "en": "woman"
+  },
+  "la-tortilla": {
+    "file": "la-tortilla.webp",
+    "es": "la tortilla",
+    "en": "tortilla"
+  },
+  "la-salsa": {
+    "file": "la-salsa.webp",
+    "es": "la salsa",
+    "en": "salsa/sauce"
+  },
+  "picante": {
+    "file": "picante.webp",
+    "es": "picante",
+    "en": "spicy"
+  },
+  "el-limon": {
+    "file": "el-limon.webp",
+    "es": "el limón",
+    "en": "lime"
+  },
+  "el-cafe": {
+    "file": "el-cafe.webp",
+    "es": "el café",
+    "en": "coffee"
+  },
+  "la-leche": {
+    "file": "la-leche.webp",
+    "es": "la leche",
+    "en": "milk"
+  },
+  "el-jugo": {
+    "file": "el-jugo.webp",
+    "es": "el jugo",
+    "en": "juice"
+  },
+  "la-fruta": {
+    "file": "la-fruta.webp",
+    "es": "la fruta",
+    "en": "fruit"
+  },
+  "la-verdura": {
+    "file": "la-verdura.webp",
+    "es": "la verdura",
+    "en": "vegetable"
+  },
+  "el-pollo": {
+    "file": "el-pollo.webp",
+    "es": "el pollo",
+    "en": "chicken"
+  },
+  "me-gusta": {
+    "file": "me-gusta.webp",
+    "es": "me gusta",
+    "en": "I like"
+  },
+  "me-gustan": {
+    "file": "me-gustan.webp",
+    "es": "me gustan",
+    "en": "I like (pl)"
+  },
+  "quiero": {
+    "file": "quiero.webp",
+    "es": "quiero",
+    "en": "I want"
+  },
+  "cuanto-cuesta": {
+    "file": "cuanto-cuesta.webp",
+    "es": "¿cuánto cuesta?",
+    "en": "how much?"
+  },
+  "la-cuenta": {
+    "file": "la-cuenta.webp",
+    "es": "la cuenta",
+    "en": "the bill"
+  },
+  "delicioso": {
+    "file": "delicioso.webp",
+    "es": "delicioso",
+    "en": "delicious"
+  },
+  "tengo-hambre": {
+    "file": "tengo-hambre.webp",
+    "es": "tengo hambre",
+    "en": "I'm hungry"
+  },
+  "tengo-sed": {
+    "file": "tengo-sed.webp",
+    "es": "tengo sed",
+    "en": "I'm thirsty"
+  },
+  "rico": {
+    "file": "rico.webp",
+    "es": "rico",
+    "en": "tasty"
+  },
+  "el-desayuno": {
+    "file": "el-desayuno.webp",
+    "es": "el desayuno",
+    "en": "breakfast"
+  },
+  "el-almuerzo": {
+    "file": "el-almuerzo.webp",
+    "es": "el almuerzo",
+    "en": "lunch"
+  },
+  "la-cena": {
+    "file": "la-cena.webp",
+    "es": "la cena",
+    "en": "dinner"
+  },
+  "el-pan": {
+    "file": "el-pan.webp",
+    "es": "el pan",
+    "en": "bread"
+  },
+  "el-arroz": {
+    "file": "el-arroz.webp",
+    "es": "el arroz",
+    "en": "rice"
+  },
+  "la-carne": {
+    "file": "la-carne.webp",
+    "es": "la carne",
+    "en": "meat"
+  },
+  "el-pescado": {
+    "file": "el-pescado.webp",
+    "es": "el pescado",
+    "en": "fish"
+  },
+  "el-huevo": {
+    "file": "el-huevo.webp",
+    "es": "el huevo",
+    "en": "egg"
+  },
+  "el-queso": {
+    "file": "el-queso.webp",
+    "es": "el queso",
+    "en": "cheese"
+  },
+  "el-azucar": {
+    "file": "el-azucar.webp",
+    "es": "el azúcar",
+    "en": "sugar"
+  },
+  "la-sal": {
+    "file": "la-sal.webp",
+    "es": "la sal",
+    "en": "salt"
+  },
+  "dulce": {
+    "file": "dulce.webp",
+    "es": "dulce",
+    "en": "sweet"
+  },
+  "me-gusta-el-cafe": {
+    "file": "me-gusta-el-cafe.webp",
+    "es": "Me gusta el café.",
+    "en": "I like coffee."
+  },
+  "no-me-gusta": {
+    "file": "no-me-gusta.webp",
+    "es": "No me gusta.",
+    "en": "I don't like it."
+  },
+  "hablar": {
+    "file": "hablar.webp",
+    "es": "hablar",
+    "en": "to speak"
+  },
+  "hablo": {
+    "file": "hablar.webp",
+    "es": "hablo",
+    "en": "I speak",
+    "alias_of": "hablar"
+  },
+  "hablas": {
+    "file": "hablar.webp",
+    "es": "hablas",
+    "en": "you speak",
+    "alias_of": "hablar"
+  },
+  "habla": {
+    "file": "hablar.webp",
+    "es": "habla",
+    "en": "he/she speaks",
+    "alias_of": "hablar"
+  },
+  "hablamos": {
+    "file": "hablar.webp",
+    "es": "hablamos",
+    "en": "we speak",
+    "alias_of": "hablar"
+  },
+  "trabajar": {
+    "file": "trabajar.webp",
+    "es": "trabajar",
+    "en": "to work"
+  },
+  "trabajo": {
+    "file": "trabajar.webp",
+    "es": "trabajo",
+    "en": "I work",
+    "alias_of": "trabajar"
+  },
+  "estudiar": {
+    "file": "estudiar.webp",
+    "es": "estudiar",
+    "en": "to study"
+  },
+  "estudio": {
+    "file": "estudiar.webp",
+    "es": "estudio",
+    "en": "I study",
+    "alias_of": "estudiar"
+  },
+  "caminar": {
+    "file": "caminar.webp",
+    "es": "caminar",
+    "en": "to walk"
+  },
+  "cocinar": {
+    "file": "cocinar.webp",
+    "es": "cocinar",
+    "en": "to cook"
+  },
+  "comprar": {
+    "file": "comprar.webp",
+    "es": "comprar",
+    "en": "to buy"
+  },
+  "escuchar": {
+    "file": "escuchar.webp",
+    "es": "escuchar",
+    "en": "to listen"
+  },
+  "cantar": {
+    "file": "cantar.webp",
+    "es": "cantar",
+    "en": "to sing"
+  },
+  "bailar": {
+    "file": "bailar.webp",
+    "es": "bailar",
+    "en": "to dance"
+  },
+  "mirar": {
+    "file": "mirar.webp",
+    "es": "mirar",
+    "en": "to watch/look"
+  },
+  "descansar": {
+    "file": "descansar.webp",
+    "es": "descansar",
+    "en": "to rest"
+  },
+  "el-espanol": {
+    "file": "el-espanol.webp",
+    "es": "el español",
+    "en": "Spanish (lang.)"
+  },
+  "mucho": {
+    "file": "mucho.webp",
+    "es": "mucho",
+    "en": "a lot"
+  },
+  "poco": {
+    "file": "poco.webp",
+    "es": "poco",
+    "en": "a little"
+  },
+  "ahora": {
+    "file": "ahora.webp",
+    "es": "ahora",
+    "en": "now"
+  },
+  "siempre": {
+    "file": "siempre.webp",
+    "es": "siempre",
+    "en": "always"
+  },
+  "nunca": {
+    "file": "nunca.webp",
+    "es": "nunca",
+    "en": "never"
+  },
+  "vender": {
+    "file": "vender.webp",
+    "es": "vender",
+    "en": "to sell"
+  },
+  "llamar": {
+    "file": "llamar.webp",
+    "es": "llamar",
+    "en": "to call"
+  },
+  "anoche": {
+    "file": "anoche.webp",
+    "es": "anoche",
+    "en": "last night"
+  },
+  "el-fin-de-semana": {
+    "file": "el-fin-de-semana.webp",
+    "es": "el fin de semana",
+    "en": "the weekend"
+  },
+  "comer": {
+    "file": "comer.webp",
+    "es": "comer",
+    "en": "I ate"
+  },
+  "vivir": {
+    "file": "vivir.webp",
+    "es": "vivir",
+    "en": "I lived"
+  },
+  "escribir": {
+    "file": "escribir.webp",
+    "es": "escribir",
+    "en": "I wrote"
+  },
+  "llegar": {
+    "file": "llegar.webp",
+    "es": "llegar",
+    "en": "I arrived"
+  },
+  "pasado": {
+    "file": "pasado.webp",
+    "es": "pasado",
+    "en": "past/last"
+  },
+  "todo-el-dia": {
+    "file": "todo-el-dia.webp",
+    "es": "todo el día",
+    "en": "all day"
+  },
+  "hacer": {
+    "file": "hacer.webp",
+    "es": "hacer",
+    "en": "I did/made"
+  },
+  "ayer-por-la-manana": {
+    "file": "ayer-por-la-manana.webp",
+    "es": "ayer por la mañana",
+    "en": "yesterday morning"
   }
 }

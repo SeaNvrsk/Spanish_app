@@ -139,9 +139,36 @@ REVIEW_THEORY = {
 }
 
 
+def _is_meta_vocab(es: str) -> bool:
+    """Grammar formulas are not speakable flashcards (TTS would play silence/English)."""
+    s = (es or "").strip()
+    if not s:
+        return True
+    low = s.lower()
+    if "+" in s or "..." in s or "infinitive" in low:
+        return True
+    if s.startswith("-") and len(s) <= 5:
+        return True
+    return False
+
+
+def _lemma_for(es: str) -> str:
+    try:
+        from ..vocab_images import image_lemma_for
+        return image_lemma_for(es) or ""
+    except Exception:
+        return ""
+
+
 def _vi(raw):
     es, en, ru = raw
-    return attach_image({"es": es, "translations": {"en": en, "ru": ru}})
+    if _is_meta_vocab(es):
+        return None
+    item = attach_image({"es": es, "translations": {"en": en, "ru": ru}})
+    lemma = _lemma_for(es)
+    if lemma:
+        item["lemma"] = lemma
+    return item
 
 
 def _norm(text: str) -> str:
@@ -186,7 +213,7 @@ def _all_program_vocab() -> tuple:
     for wk in WEEKS:
         for raw in wk.get("vocab", []):
             v = _vi(raw)
-            if v["es"] in seen:
+            if not v or v["es"] in seen:
                 continue
             seen.add(v["es"])
             pool.append(v)
@@ -194,7 +221,7 @@ def _all_program_vocab() -> tuple:
         if w in A1_BOOST:
             for raw in A1_BOOST[w] + A1_BOOST_EXTRA.get(w, []):
                 v = _vi(raw)
-                if v["es"] in seen:
+                if not v or v["es"] in seen:
                     continue
                 seen.add(v["es"])
                 pool.append(v)
@@ -309,6 +336,13 @@ def _est_minutes(exercises: List[dict], has_theory: bool = False) -> int:
     return max(10, round(secs / 60))
 
 
+def _with_lemma(ex, word_es=""):
+    lemma = _lemma_for(word_es or ex.get("es") or "")
+    if lemma:
+        ex["lemma"] = lemma
+    return ex
+
+
 def _cloze_exercise(ex_id, chunk):
     """Fill-in-the-blank in a real sentence (contextual active recall)."""
     filled = chunk["template"].replace("___", chunk["answer"])
@@ -318,6 +352,7 @@ def _cloze_exercise(ex_id, chunk):
         "es": filled,
         "translations": {"en": chunk["en"], "ru": chunk["ru"]},
         "audio": filled,
+        "lemma": _lemma_for(chunk["answer"]),
     }
     url = image_url_for(chunk["answer"])
     if url:
@@ -327,10 +362,10 @@ def _cloze_exercise(ex_id, chunk):
 
 def _speak_exercise(ex_id, v):
     """Pronunciation practice: the learner records and gets a score."""
-    out = {
+    out = _with_lemma({
         "id": ex_id, "type": "speak",
         "es": v["es"], "translations": v["translations"], "audio": v["es"],
-    }
+    }, v["es"])
     if v.get("image_url"):
         out["image_url"] = v["image_url"]
     return out
@@ -340,7 +375,10 @@ def _quiz_exercise(rng, ex_id, v, pool, i, force_type=None):
     """Build one quiz exercise (no flashcard), cycling through 4 types."""
     types = ["choice_es_to_native", "listen", "choice_native_to_es", "translate"]
     ex_type = force_type if force_type else types[i % len(types)]
-    base = {"id": ex_id, "es": v["es"], "translations": v["translations"], "audio": v["es"]}
+    base = _with_lemma(
+        {"id": ex_id, "es": v["es"], "translations": v["translations"], "audio": v["es"]},
+        v["es"],
+    )
     if v.get("image_url"):
         base["image_url"] = v["image_url"]
 
@@ -446,11 +484,11 @@ def _day_lesson(lid, week_meta, day_in_week, global_day, new_vocab, review_pool,
 
     # 1) Preview new words with flashcards (with audio)
     for i, v in enumerate(new_vocab):
-        exercises.append({
+        exercises.append(_with_lemma({
             "id": f"{lid}-fc{i}", "type": "flashcard",
             "es": v["es"], "translations": v["translations"], "audio": v["es"],
             **({"image_url": v["image_url"]} if v.get("image_url") else {}),
-        })
+        }, v["es"]))
 
     # 2) Retrieval practice on the new words (mixed types)
     for i, v in enumerate(new_vocab):
@@ -555,12 +593,12 @@ def _make_week_meta(w):
     """Return (meta, vocab, is_review, chunks) for authored or spiral-review weeks."""
     for wk in WEEKS:
         if wk["week"] == w:
-            vocab = [_vi(v) for v in wk["vocab"]]
+            vocab = [v for v in (_vi(item) for item in wk["vocab"]) if v]
             if wk["level"] == "A1" and w in A1_BOOST:
                 seen = {v["es"] for v in vocab}
                 for raw in A1_BOOST[w] + A1_BOOST_EXTRA.get(w, []):
                     v = _vi(raw)
-                    if v["es"] not in seen:
+                    if v and v["es"] not in seen:
                         vocab.append(v)
                         seen.add(v["es"])
             return wk, vocab, False, list(wk.get("chunks", []))

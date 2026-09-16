@@ -15,6 +15,7 @@ import argparse
 import asyncio
 import io
 import os
+import re
 import sys
 import time
 
@@ -29,6 +30,7 @@ from app.curriculum.a1_boost import A1_BOOST  # noqa: E402
 from app.curriculum.a1_boost_extra import A1_BOOST_EXTRA  # noqa: E402
 from app.curriculum.program import WEEKS  # noqa: E402
 from app.vocab_images import (  # noqa: E402
+    image_canonical_word,
     image_file_for,
     images_dir,
     invalidate_manifest_cache,
@@ -163,7 +165,61 @@ QUERY_OVERRIDES: dict[str, str] = {
     "la gente": "crowd people street",
     "el hombre": "man portrait adult",
     "la mujer": "woman portrait adult",
+    # Week 12 — first past tense (concrete photos, not icons/landmarks)
+    "ayer": "person looking at old photograph remembering yesterday",
+    "anoche": "night city lights mexico",
+    "el fin de semana": "weekend family picnic park",
+    "comí": "person eating tacos mexico",
+    "comer": "person eating mexican food tacos",
+    "fui": "person walking down street",
+    "el cine": "cinema movie theater seats popcorn",
+    "todo el día": "sunrise to sunset full day",
+    "pasado": "old vintage photograph memory",
+    "terminé": "student closing notebook after finishing homework",
+    "terminar": "student closing notebook after finishing homework",
+    "llegué": "person arriving home front door",
+    "llegar": "person arriving train station",
+    "vivir": "family living in house home",
+    "escribir": "person writing letter notebook",
+    "¿qué hiciste?": "two friends talking over coffee catching up",
+    "qué hiciste": "two friends talking over coffee catching up",
+    "qué hiciste ayer": "two friends talking over coffee catching up",
+    "hacer": "person doing homework writing",
+    "el día": "sunny day blue sky",
+    "taco": "mexican tacos plate",
+    "tacos": "mexican street tacos plate",
+    "temprano": "early morning sunrise person waking coffee",
+    "ayer por la mañana": "early morning sunrise beach walk",
+    "ayer fui al cine": "people watching movie cinema seats popcorn",
+    "no fui": "person staying home on sofa",
+    "fue muy bueno": "people smiling applauding concert",
+    "cuándo fue": "hand flipping calendar date page",
+    "el pasado": "old black and white family photographs",
+    "una vez": "hand showing one finger number one",
+    "la semana pasada": "weekly planner previous week",
+    "el mes pasado": "monthly calendar page turning",
+    "el año pasado": "new year fireworks celebration night",
 }
+
+# Grammar labels / abstract tense names — skip photos rather than attach junk.
+SKIP_IMAGE_KEYS = {
+    "el pretérito",
+    "el preterito",
+    "la conjugación",
+    "la conjugacion",
+    "el verbo",
+    "la forma",
+    "terminación",
+    "terminacion",
+    "regular",
+    "irregular",
+}
+
+_JUNK_PHOTO = re.compile(
+    r"\b(3d|icon|illustration|render|logo|clipart|vector|mockup|thumbnail|"
+    r"thumbs up|facebook|like button)\b",
+    re.I,
+)
 
 
 def collect_vocab(weeks: list[int] | None, level: str | None, limit: int | None) -> list[tuple[str, str, str]]:
@@ -174,10 +230,16 @@ def collect_vocab(weeks: list[int] | None, level: str | None, limit: int | None)
         if weeks is not None and wk["week"] not in weeks:
             continue
         for raw in wk.get("vocab", []):
+            key = " ".join(raw[0].lower().replace("¿", "").replace("?", "").split())
+            if key in SKIP_IMAGE_KEYS:
+                continue
             seen[vocab_slug(raw[0])] = raw
         if wk.get("level") == "A1":
             w = wk["week"]
             for raw in A1_BOOST.get(w, []) + A1_BOOST_EXTRA.get(w, []):
+                key = " ".join(raw[0].lower().replace("¿", "").replace("?", "").replace("…", "").split())
+                if key in SKIP_IMAGE_KEYS:
+                    continue
                 seen.setdefault(vocab_slug(raw[0]), raw)
     out = list(seen.values())
     if limit:
@@ -213,11 +275,25 @@ def optimize_for_mobile(raw: bytes, settings) -> tuple[bytes, str]:
         return raw, "jpg"
 
 
-async def search_photo(client: httpx.AsyncClient, access_key: str, query: str) -> dict | None | str:
+def photo_looks_like_photo(photo: dict) -> bool:
+    blob = " ".join(
+        filter(
+            None,
+            [
+                photo.get("description"),
+                photo.get("alt_description"),
+                " ".join((t.get("title") or "") for t in (photo.get("tags") or [])),
+            ],
+        )
+    )
+    return not _JUNK_PHOTO.search(blob)
+
+
+async def search_photo(client: httpx.AsyncClient, access_key: str, query: str, used_ids: set[str]) -> dict | None | str:
     """Return photo dict, None if empty, or 'rate_limited'."""
     resp = await client.get(
         "https://api.unsplash.com/search/photos",
-        params={"query": query, "per_page": 5, "orientation": "squarish", "content_filter": "high"},
+        params={"query": query, "per_page": 10, "orientation": "squarish", "content_filter": "high"},
         headers={"Authorization": f"Client-ID {access_key}", "Accept-Version": "v1"},
         timeout=30,
     )
@@ -233,6 +309,13 @@ async def search_photo(client: httpx.AsyncClient, access_key: str, query: str) -
         print(f"  FAIL search HTTP {resp.status_code}: {resp.text[:180]}")
         return None
     results = resp.json().get("results") or []
+    for photo in results:
+        pid = photo.get("id") or ""
+        if pid and pid in used_ids:
+            continue
+        if not photo_looks_like_photo(photo):
+            continue
+        return photo
     return results[0] if results else None
 
 
@@ -271,25 +354,54 @@ async def run(args):
     words = collect_vocab(args.weeks, args.level, None)
     if args.all:
         words = collect_vocab(None, None, None)
+    if args.only:
+        want = {vocab_slug(x) for x in args.only}
+        words = [row for row in collect_vocab(None, None, None) if vocab_slug(row[0]) in want]
+        if len(words) < len(want):
+            # Allow downloading even if the lemma is not in the curriculum dump.
+            have = {vocab_slug(row[0]) for row in words}
+            for raw in args.only:
+                if vocab_slug(raw) not in have:
+                    words.append((raw, "", ""))
+        args.force = True
     if args.limit:
         words = words[: args.limit]
 
     os.makedirs(images_dir(), exist_ok=True)
-    if args.force:
-        todo = list(words)
-    else:
-        todo = [(es, en, ru) for es, en, ru in words if not image_file_for(es)]
+    # Conjugations share the infinitive image — download each lemma once.
+    todo: list[tuple[str, str, str]] = []
+    seen_keys: set[str] = set()
+    for es, en, ru in words:
+        skip_key = " ".join(es.lower().replace("¿", "").replace("?", "").replace("…", "").split())
+        if skip_key in SKIP_IMAGE_KEYS:
+            continue
+        canonical = image_canonical_word(es)
+        key = vocab_slug(canonical)
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        if not args.force and image_file_for(canonical):
+            continue
+        # Prefer infinitive row gloss when we collapsed a conjugated form.
+        gloss_en, gloss_ru = en, ru
+        if canonical != es:
+            for ces, cen, cru in words:
+                if vocab_slug(ces) == key:
+                    gloss_en, gloss_ru = cen, cru
+                    break
+        todo.append((canonical, gloss_en, gloss_ru))
 
     print(f"Total unique words: {len(words)}, to download: {len(todo)}", flush=True)
     ok = 0
     fail = 0
+    used_ids: set[str] = set()
 
     async with httpx.AsyncClient() as client:
         for i, (es, en, ru) in enumerate(todo, start=1):
             slug = vocab_slug(es)
             query = search_query(es, en)
             print(f"[{i}/{len(todo)}] {es} ← “{query}” …", flush=True)
-            photo = await search_photo(client, access_key, query)
+            photo = await search_photo(client, access_key, query, used_ids)
             if photo == "rate_limited":
                 print("Rate limit hit — stop and re-run later (demo apps ~50 req/hour).", flush=True)
                 break
@@ -297,7 +409,7 @@ async def run(args):
                 fallback = (en or es).split("(")[0].strip()
                 if fallback and fallback != query:
                     print(f"  retry “{fallback}” …", flush=True)
-                    photo = await search_photo(client, access_key, fallback)
+                    photo = await search_photo(client, access_key, fallback, used_ids)
                     if photo == "rate_limited":
                         print("Rate limit hit — stop and re-run later.", flush=True)
                         break
@@ -317,6 +429,8 @@ async def run(args):
                 fh.write(raw)
             save_manifest_entry(slug, fname, es, en)
             invalidate_manifest_cache()
+            if photo.get("id"):
+                used_ids.add(photo["id"])
             ok += 1
             photographer = ((photo.get("user") or {}).get("name")) or "?"
             print(f"  OK {fname} ({len(raw)//1024}KB) — {photographer}")
@@ -338,10 +452,12 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="Max words to process")
     parser.add_argument("--all", action="store_true", help="All curriculum words")
     parser.add_argument("--force", action="store_true", help="Re-download even if image exists")
+    parser.add_argument("--only", type=str, default=None, help="Comma-separated Spanish words or slugs to (re)download")
     parser.add_argument("--delay", type=float, default=1.2, help="Seconds between API calls")
     args = parser.parse_args()
     args.weeks = parse_weeks(args.weeks)
-    if not args.all and args.limit is None and args.weeks is None and args.level is None:
+    args.only = [x.strip() for x in args.only.split(",") if x.strip()] if args.only else None
+    if not args.all and args.limit is None and args.weeks is None and args.level is None and not args.only:
         args.weeks = [3]
     asyncio.run(run(args))
 

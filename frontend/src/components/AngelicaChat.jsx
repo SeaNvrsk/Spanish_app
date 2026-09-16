@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import api from "../api";
 import { useI18n } from "../i18n";
 import { useKeyboardInset } from "../useKeyboardInset";
-import { useSpeak } from "../tts";
+import { unlockAudio, useSpeak } from "../tts";
 import { ToolSheet } from "./ToolsFooter";
 
 function AngelicaSpeakButton({ text }) {
@@ -11,6 +11,7 @@ function AngelicaSpeakButton({ text }) {
   return (
     <button
       type="button"
+      onPointerDown={unlockAudio}
       onClick={() => speak(text)}
       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-500 text-sm text-white shadow-md shadow-pink-500/30 transition active:scale-90 ${
         speaking ? "animate-pulse" : ""
