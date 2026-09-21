@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "export VITE_BASE_PATH=\"${VITE_BASE_PATH:-$(sed 's|/*$|/|' ../.public_path)}\" && echo \"VITE_BASE_PATH=$VITE_BASE_PATH\" && vite build && node scripts/split-classic-bundle.mjs",
-    "test": "node --test scripts/test-tts-playback.mjs",
+    "test": "node --test scripts/test-tts-playback.mjs scripts/test-cloze-eval.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -4,7 +4,7 @@ import { useI18n, nativeGloss } from "../i18n";
 import { stopPlayback, unlockAudio, useSpeak, isSpeakableSpanish } from "../tts";
 import { useKeyboardInset } from "../useKeyboardInset";
 import { WordImage } from "./WordImage";
-import { normalize, isChoiceCorrect, isSynonymOption, isTranslateCorrect } from "../exerciseEval";
+import { normalize, isChoiceCorrect, isClozeCorrect, isSynonymOption, isTranslateCorrect } from "../exerciseEval";
 
 export { normalize };
 
@@ -328,7 +328,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish, onClose }) {
   const evaluate = () => {
     let ok = false;
     if (ex.type === "translate") ok = isTranslateCorrect(ex, typed);
-    else if (ex.type === "cloze") ok = normalize(typed) === normalize(ex.answer);
+    else if (ex.type === "cloze") ok = isClozeCorrect(ex, typed);
     else ok = isChoiceCorrect(ex, selected, options, lang);
     setStatus(ok ? "correct" : "wrong");
     setScoredTotal((n) => n + 1);
@@ -367,7 +367,7 @@ export default function ExercisePlayer({ exercises, kind, onFinish, onClose }) {
 
   const textInput = hasTextInput && status === "idle" && (
     <input
-      autoFocus={ex.type !== "cloze"}
+      autoFocus
       value={typed}
       onChange={(e) => setTyped(e.target.value)}
       onKeyDown={(e) => e.key === "Enter" && typed.trim() && evaluate()}
@@ -479,12 +479,18 @@ export default function ExercisePlayer({ exercises, kind, onFinish, onClose }) {
                 {nativeGloss(ex.translations, lang)}
               </span>
             </div>
-            <div className={`mb-3 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 rounded-2xl bg-slate-50 px-4 text-2xl font-black text-slate-800 ${keyboardOpen ? "py-4" : "py-6"}`}>
-              <span>{clozeParts[0]}</span>
-              <span className="inline-block min-w-[80px] rounded-lg border-b-4 border-teal-400 bg-white px-3 py-1 text-center text-teal-600">
-                {status !== "idle" ? ex.answer : typed || "?"}
-              </span>
-              <span>{clozeParts[1]}</span>
+            <div className={`mb-3 flex flex-col items-center gap-3 rounded-2xl bg-slate-50 px-4 ${keyboardOpen ? "py-4" : "py-6"}`}>
+              <p className="text-center text-2xl font-black leading-relaxed text-slate-800">
+                {clozeParts[0]}
+                <span
+                  className={`mx-1 inline-block min-w-[5rem] rounded-lg border-b-4 bg-white px-3 py-1 text-center align-baseline ${
+                    status === "wrong" ? "border-red-400 text-red-500" : "border-teal-400 text-teal-600"
+                  }`}
+                >
+                  {status === "correct" ? ex.answer : typed || "?"}
+                </span>
+                {clozeParts[1] || ""}
+              </p>
               <SpeakButton key={`${ex.id}-cloze`} text={ex.audio} lemma={ex.lemma} />
             </div>
           </>
@@ -516,7 +522,17 @@ export default function ExercisePlayer({ exercises, kind, onFinish, onClose }) {
               </p>
               {status === "wrong" && (
                 <p className="text-sm font-semibold text-slate-600">
+                  {hasTextInput && typed.trim() && normalize(typed) !== normalize(ex.answer) && (
+                    <span className="mb-1 block">
+                      {t("youWrote")}: <span className="text-red-600">{typed.trim()}</span>
+                    </span>
+                  )}
                   {t("theAnswer")}: <span className="text-slate-900">{correctAnswerLabel()}</span>
+                  {ex.type === "cloze" && (ex.sentence || ex.es) && (
+                    <span className="mt-1 block text-xs font-medium text-slate-500">
+                      {t("fullSentence")}: {ex.sentence || ex.es}
+                    </span>
+                  )}
                   {ex.type === "listen" && ex.audio && ex.audio !== ex.answer && (
                     <span className="mt-1 block text-xs font-medium text-slate-500">
                       ({ex.audio})

@@ -1,14 +1,7 @@
 import { nativeGloss } from "./i18n";
+import { normalize } from "./answerMatch";
 
-export function normalize(s) {
-  return (s || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[¿?¡!.,;:"'()]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+export { normalize, isClozeCorrect, isTranslateCorrect, typedMatchesSpanish } from "./answerMatch";
 
 export function glossKey(translations, lang) {
   return normalize(nativeGloss(translations, lang));
@@ -33,13 +26,6 @@ export function isChoiceCorrect(ex, selectedEs, options, lang) {
   const selectedOpt = options.find((o) => o.es === selectedEs);
   if (!answerOpt || !selectedOpt) return false;
   return sameMeaning(answerOpt.translations, selectedOpt.translations);
-}
-
-export function isTranslateCorrect(ex, typed) {
-  const t = normalize(typed);
-  if (!t) return false;
-  if (t === normalize(ex.answer)) return true;
-  return (ex.accepted_answers || []).some((a) => normalize(a) === t);
 }
 
 export function isSynonymOption(ex, option, options, lang) {
