@@ -1,30 +1,49 @@
-/** Tiny silent WAV — unlocks HTMLAudio inside a user gesture on iOS. */
+/** Tiny silent WAV — optional HTMLAudio unlock on the first page gesture. */
 export const SILENT_WAV =
   "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
 
 /**
- * Shared-element playback for iOS.
+ * Playback that stays inside the tap gesture.
  *
- * iPhone reuses one <audio>. If pointerdown calls play() on whatever is
- * already in src, the NEXT word/lesson replays the PREVIOUS clip.
+ * Mobile browsers ignore HTMLAudio.play() after await. They DO allow
+ * AudioContext.resume() in the tap, then BufferSource.start() later.
+ * Never clear src + load() on the shared <audio> — that leaves it dead
+ * for the next word.
  */
 export function createPlaybackController() {
-  let primed = false;
+  let htmlPrimed = false;
   let playGen = 0;
+  let currentSource = null;
+
+  function stopCurrentSource() {
+    if (!currentSource) return;
+    try {
+      currentSource.onended = null;
+      currentSource.stop();
+    } catch {
+      /* already stopped */
+    }
+    try {
+      currentSource.disconnect();
+    } catch {
+      /* ignore */
+    }
+    currentSource = null;
+  }
 
   return {
     isPrimed() {
-      return primed;
+      return htmlPrimed;
     },
 
     /**
-     * Unlock only. Never replay the last lesson's file.
-     * First call: play a silent WAV once. Later calls: no-op on HTMLAudio.
+     * Unlock only. First call may play a silent WAV. Later calls never
+     * replay whatever clip is sitting in <audio>.
      */
     unlockHtmlAudio(audio) {
       if (!audio) return { action: "skip" };
-      if (primed) return { action: "noop" };
-      primed = true;
+      if (htmlPrimed) return { action: "noop" };
+      htmlPrimed = true;
       audio.src = SILENT_WAV;
       try {
         audio.load();
@@ -45,35 +64,69 @@ export function createPlaybackController() {
       return { action: "prime-silent" };
     },
 
-    /** Tear down current src so iOS cannot keep playing the previous blob. */
     hardReset(audio) {
+      stopCurrentSource();
       if (!audio) return;
       try {
         audio.pause();
-      } catch {
-        /* ignore */
-      }
-      try {
-        audio.removeAttribute("src");
-        audio.src = "";
-        audio.load();
+        audio.currentTime = 0;
       } catch {
         /* ignore */
       }
     },
 
+    async playDecoded(ctx, blob) {
+      const myGen = ++playGen;
+      stopCurrentSource();
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
+      if (ctx.state !== "running") {
+        throw new Error("AudioContext not running");
+      }
+      const ab = await blob.arrayBuffer();
+      if (myGen !== playGen) return;
+      const buf = await ctx.decodeAudioData(ab.slice(0));
+      if (myGen !== playGen) return;
+      await new Promise((resolve, reject) => {
+        const source = ctx.createBufferSource();
+        source.buffer = buf;
+        source.connect(ctx.destination);
+        source.onended = () => {
+          if (currentSource === source) currentSource = null;
+          if (myGen === playGen) resolve();
+        };
+        try {
+          currentSource = source;
+          source.start(0);
+        } catch (err) {
+          currentSource = null;
+          reject(err);
+        }
+      });
+    },
+
     playUrl(audio, url) {
       const myGen = ++playGen;
-      this.hardReset(audio);
+      stopCurrentSource();
+      if (!audio) return Promise.reject(new Error("no audio element"));
+      try {
+        audio.pause();
+      } catch {
+        /* ignore */
+      }
       audio.playsInline = true;
       audio.setAttribute("playsinline", "true");
       audio.setAttribute("webkit-playsinline", "true");
       audio.volume = 1;
-      audio.src = url;
-      try {
-        audio.load();
-      } catch {
-        /* ignore */
+      if (audio.src !== url) {
+        audio.src = url;
+      } else {
+        try {
+          audio.currentTime = 0;
+        } catch {
+          /* ignore */
+        }
       }
 
       return new Promise((resolve, reject) => {

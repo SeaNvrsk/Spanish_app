@@ -8,11 +8,19 @@ import { ToolSheet } from "./ToolsFooter";
 function AngelicaSpeakButton({ text }) {
   const { t } = useI18n();
   const { speak, speaking } = useSpeak("angelica");
+  const playNow = (e) => {
+    if (e.pointerType && e.button && e.button !== 0) return;
+    unlockAudio();
+    speak(text);
+  };
   return (
     <button
       type="button"
-      onPointerDown={unlockAudio}
-      onClick={() => speak(text)}
+      onPointerDown={playNow}
+      onClick={(e) => {
+        if (e.detail !== 0) return;
+        playNow(e);
+      }}
       className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-500 text-sm text-white shadow-md shadow-pink-500/30 transition active:scale-90 ${
         speaking ? "animate-pulse" : ""
       }`}

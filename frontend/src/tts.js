@@ -6,20 +6,24 @@ let serverTtsAvailable = null;
 
 /** Object-URL cache (legacy / HTMLAudio src). */
 const audioUrlCache = new Map();
-/** Raw blob cache — preferred; lets iOS play inside the tap gesture. */
+/** Raw blob cache — preferred; lets playback start on the same tap. */
 const audioBlobCache = new Map();
 const AUDIO_CACHE_MAX = 300;
 
-/** Shared AudioContext — resume() must run inside a user gesture on iOS. */
+/** Shared AudioContext — resume() must run inside a user gesture. */
 let sharedAudioCtx = null;
 
-/** One shared element — iOS is picky about many Audio() instances. */
+/** One shared element — fallback only. */
 let sharedHtmlAudio = null;
 
 const IS_IOS =
   typeof navigator !== "undefined" &&
   (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+const IS_MOBILE =
+  typeof navigator !== "undefined" &&
+  (IS_IOS || /Android/i.test(navigator.userAgent));
 
 const playback = createPlaybackController();
 
@@ -44,18 +48,13 @@ function getHtmlAudio() {
 }
 
 /**
- * Call synchronously at the start of a click/tap handler (before any await).
- * Unlocks both Web Audio and HTMLAudio for iPhone / PWA.
+ * Call synchronously at the start of a click/tap (before any await).
+ * Resumes Web Audio. Does not replay a previous lesson clip.
  */
 export function unlockAudio() {
   const ctx = getAudioContext();
   if (ctx && ctx.state === "suspended") {
     ctx.resume().catch(() => {});
-  }
-  try {
-    playback.unlockHtmlAudio(getHtmlAudio());
-  } catch {
-    /* ignore */
   }
 }
 
@@ -154,47 +153,19 @@ export function isSpeakableSpanish(text) {
   return true;
 }
 
-function playUrlHtmlAudio(url) {
-  return playback.playUrl(getHtmlAudio(), url);
-}
-
-async function playBlobViaWebAudio(blob) {
-  const ctx = getAudioContext();
-  if (!ctx) throw new Error("no AudioContext");
-  if (ctx.state === "suspended") {
-    await ctx.resume();
-  }
-  if (ctx.state !== "running") {
-    throw new Error("AudioContext not running");
-  }
-  const ab = await blob.arrayBuffer();
-  const copy = ab.slice(0);
-  const audioBuf = await ctx.decodeAudioData(copy);
-  const source = ctx.createBufferSource();
-  source.buffer = audioBuf;
-  source.connect(ctx.destination);
-  await new Promise((resolve, reject) => {
-    source.onended = () => resolve();
-    try {
-      source.start(0);
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
 async function playBlob(blob, url) {
-  // iPhone: HTMLAudio + playsInline is more reliable than Web Audio (silent switch /
-  // PWA). Other platforms: try Web Audio first (lower latency), then HTMLAudio.
-  if (IS_IOS) {
-    await playUrlHtmlAudio(url);
-    return;
+  const ctx = getAudioContext();
+  // After resume() in the tap, BufferSource.start() still works following await.
+  // HTMLAudio.play() after await is what goes silent on phones.
+  if (ctx) {
+    try {
+      await playback.playDecoded(ctx, blob);
+      return;
+    } catch {
+      /* HTMLAudio fallback */
+    }
   }
-  try {
-    await playBlobViaWebAudio(blob);
-  } catch {
-    await playUrlHtmlAudio(url);
-  }
+  await playback.playUrl(getHtmlAudio(), url);
 }
 
 let probePromise = null;
@@ -219,11 +190,17 @@ async function probeServerTts() {
 async function fetchTtsBlob(endpoint, text, lemma = "") {
   const body = { text };
   if (lemma) body.infinitive = lemma;
-  const { data } = await api.post(endpoint, body, { responseType: "blob", timeout: 12000 });
+  const { data, status } = await api.post(endpoint, body, {
+    responseType: "blob",
+    timeout: 12000,
+    validateStatus: (s) => s === 200,
+  });
+  if (status === 304) throw new Error("TTS: empty 304");
   assertAudioBlob(data);
   let blob = data;
-  // iOS sometimes gives an empty MIME — force audio/mpeg so <audio> accepts it.
-  if (!data.type || data.type === "application/octet-stream") {
+  if (!data.type || data.type === "application/octet-stream" || data.type === "application/json") {
+    blob = new Blob([data], { type: "audio/mpeg" });
+  } else if (data.type !== "audio/mpeg") {
     blob = new Blob([data], { type: "audio/mpeg" });
   }
   if (!(await blobLooksLikeMp3(blob))) throw new Error("TTS: not mp3");
@@ -236,6 +213,7 @@ export function useSpeak(profile = "default") {
   const cacheProfile = isAngelica ? "angelica-v16" : "default-v17";
 
   const [speaking, setSpeaking] = useState(false);
+  const [playError, setPlayError] = useState(false);
   const genRef = useRef(0);
   const prefetchingRef = useRef(new Set());
 
@@ -271,7 +249,7 @@ export function useSpeak(profile = "default") {
         const url = URL.createObjectURL(blob);
         cachePut(text, cacheProfile, blob, url, lemma);
       } catch {
-        /* ignore — speak() will retry */
+        /* speak() will retry */
       } finally {
         prefetchingRef.current.delete(waitKey);
       }
@@ -283,11 +261,12 @@ export function useSpeak(profile = "default") {
     async (text, lemma = "") => {
       if (!text || !isSpeakableSpanish(text)) return;
 
-      // CRITICAL: must run before any await — keeps iOS audio unlocked.
+      // Must run before any await — keeps AudioContext in the tap gesture.
       unlockAudio();
 
       const myGen = ++genRef.current;
       setSpeaking(true);
+      setPlayError(false);
       const stillMine = () => myGen === genRef.current;
 
       try {
@@ -313,17 +292,34 @@ export function useSpeak(profile = "default") {
           return;
         }
       } catch {
-        // Fall through to browser voice.
+        // Mobile speechSynthesis is usually silent. Retry HTMLAudio once.
       }
 
       if (!stillMine()) return;
-      speakBrowser(text, isAngelica);
-      setTimeout(() => {
-        if (stillMine()) setSpeaking(false);
-      }, Math.min(4000, 600 + text.length * 90));
+      try {
+        const blob = cacheGetBlob(text, cacheProfile, lemma);
+        const url = cacheGetUrl(text, cacheProfile, lemma);
+        if (blob && url) {
+          await playback.playUrl(getHtmlAudio(), url);
+          if (stillMine()) setSpeaking(false);
+          return;
+        }
+      } catch {
+        /* last resort below */
+      }
+
+      if (!stillMine()) return;
+      if (!IS_MOBILE && speakBrowser(text, isAngelica)) {
+        setTimeout(() => {
+          if (stillMine()) setSpeaking(false);
+        }, Math.min(4000, 600 + text.length * 90));
+        return;
+      }
+      setSpeaking(false);
+      setPlayError(true);
     },
     [cacheProfile, endpoint, isAngelica]
   );
 
-  return { speak, speaking, prefetch };
+  return { speak, speaking, prefetch, playError };
 }

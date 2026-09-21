@@ -10,7 +10,7 @@ export { normalize };
 
 export function SpeakButton({ text, lemma = "", big, small, autoPrefetch = true }) {
   const { t } = useI18n();
-  const { speak, speaking, prefetch } = useSpeak();
+  const { speak, speaking, prefetch, playError } = useSpeak();
   const speakable = isSpeakableSpanish(text);
   const sizeClass = big
     ? "h-20 w-20 text-4xl"
@@ -24,16 +24,25 @@ export function SpeakButton({ text, lemma = "", big, small, autoPrefetch = true 
 
   if (!speakable) return null;
 
+  const playNow = (e) => {
+    if (e.pointerType && e.button && e.button !== 0) return;
+    unlockAudio();
+    speak(text, lemma);
+  };
+
   return (
     <button
       type="button"
-      // Unlock before click/fetch so iOS still allows playback after await.
-      onPointerDown={unlockAudio}
-      onClick={() => speak(text, lemma)}
+      onPointerDown={playNow}
+      onClick={(e) => {
+        if (e.detail !== 0) return;
+        playNow(e);
+      }}
       className={`flex items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-500/40 transition active:scale-90 ${sizeClass} ${
         speaking ? "animate-pulse" : ""
-      }`}
-      aria-label={t("playAudio")}
+      } ${playError ? "ring-2 ring-red-400" : ""}`}
+      aria-label={playError ? t("playFailed") : t("playAudio")}
+      title={playError ? t("playFailed") : t("playAudio")}
     >
       🔊
     </button>

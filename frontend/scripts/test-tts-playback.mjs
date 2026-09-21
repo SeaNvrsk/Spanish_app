@@ -83,6 +83,5 @@ test("stop after word A leaves a clean element for word B", () => {
   audio.src = "blob:word-a";
   audio.paused = false;
   ctl.stop(audio);
-  assert.equal(audio.src, "");
   assert.equal(audio.paused, true);
 });

@@ -385,9 +385,6 @@ async def _speak_profile(text: str, request: Request, profile: str, hint_infinit
     hint = (hint_infinitive or "").strip()
     key = _cache_key(text, profile, hint)
 
-    if request.headers.get("if-none-match") == f'"{key}"':
-        return Response(status_code=304, headers={"ETag": f'"{key}"', "X-TTS-Cache": "HIT-304"})
-
     cached = _load_cached(key)
     if cached is not None:
         return _audio_response(cached, key, "HIT")
